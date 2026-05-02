@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Carné - Ecotópico</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <!-- Librería QR -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script type="module" src="script.js"></script>
+</head>
+<body>
+
+    <div class="tarjeta app-principal">
+        
+        <!-- SECCIÓN 1: Perfil del Usuario -->
+        <div class="perfil-usuario">
+            <div class="info-texto">
+                <h3 id="nombre-usuario">Cargando...</h3>
+                <p class="id-usuario">¡¡A por esos 500 ecopoints!!</p>
+            </div>
+            <div class="progreso-circular">
+                <span id="porcentaje-texto">0%</span>
+            </div>
+        </div>
+
+        <hr class="separador">
+
+        <!-- SECCIÓN 2: Lista de Objetivos -->
+        <div class="lista-objetivos">
+            <h3 class="titulo-seccion">Mis Objetivos</h3>
+            <h4>Actividades Realizadas</h4>
+            <div id="lista-actividades-usuario" class="contenedor-actividades">
+                <p id="mensaje-vacio" style="font-size: 0.8em; color: rgba(255,255,255,0.5);">Aún no has participado en eventos.</p>
+            </div>
+        </div> 
+        <!-- Opción: Botón justo encima del historial -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+            <h3 class="titulo-seccion">Mis Objetivos</h3>
+            <button class="btn-puntos" onclick="recargarDatosManual()" style="padding: 5px 10px; font-size: 0.7em;">
+                🔄 Actualizar
+            </button>
+        </div>
+        <hr class="separador">
+
+        <!-- SECCIÓN 3: Código QR -->
+        <div id="qrcode"></div> <!-- Dejamos que el CSS controle el estilo -->
+
+        <hr class="separador">
+
+        <!-- SECCIÓN 4: Botón para salir (Llamando a la función real de cerrar sesión) -->
+        <button class="btn-secundario mt-20" onclick="cerrarSesion()">CERRAR SESIÓN</button>
+        
+    </div>
+
+</body>
+</html>

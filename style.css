@@ -1,0 +1,401 @@
+/* 1. REINICIO GENERAL */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* 2. EL FONDO DE PANTALLA (La hoja) */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-image: url('texturas_hoja.jpg'); /* Carga tu imagen de fondo */
+    background-size: cover; /* Hace que la imagen cubra toda la pantalla sin deformarse */
+    background-position: center; /* Centra la imagen */
+    background-attachment: fixed; /* Evita que el fondo se mueva al hacer scroll */
+    color: white; /* Todo el texto general pasa a ser blanco */
+    
+    /* Centrado vertical y horizontal perfecto */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh; /* 100vh significa el 100% de la altura de la pantalla (ViewPort Height) */
+}
+
+/* 3. LA TARJETA (El panel oscuro central con brillo) */
+.tarjeta {
+    background-color: rgba(0, 0, 0, 0.75); /* Negro (0,0,0) con 75% de opacidad (semi-transparente) */
+    width: 90%;
+    max-width: 400px;
+    padding: 40px 30px;
+    border-radius: 20px;
+    text-align: center;
+    
+    /* El borde verde Ecotopía y su brillo neón */
+    border: 2px solid #7ed957; 
+    box-shadow: 0 0 25px rgba(126, 217, 87, 0.4); 
+}
+
+/* 4. EL LOGO Y LOS TÍTULOS */
+.logo {
+    width: 160px; /* Tamaño del logo */
+    margin-bottom: 10px; /* Separación con el título de abajo */
+}
+
+h2 {
+    color: #7ed957; /* Verde brillante */
+    margin-bottom: 25px;
+    font-size: 22px;
+    letter-spacing: 1px; /* Separa un poco las letras para darle toque moderno */
+    text-transform: uppercase; /* Pone todo en mayúsculas automáticamente */
+}
+
+/* 5. EL FORMULARIO Y LAS CAJAS DE TEXTO */
+form {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+
+label {
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #c4c4c4; /* Gris clarito para no competir con el blanco puro */
+    font-size: 14px;
+}
+
+input {
+    padding: 15px;
+    margin-bottom: 20px;
+    background-color: rgba(255, 255, 255, 0.08); /* Fondo casi transparente para ver la hoja debajo */
+    border: 1px solid #7ed957;
+    border-radius: 10px;
+    color: white; /* El texto que escribe el usuario */
+    font-size: 16px;
+    outline: none; /* Quita el borde azul feo que ponen los navegadores al hacer clic */
+    transition: box-shadow 0.3s ease; /* Prepara una animación suave para el brillo */
+}
+
+/* Cambia el color del texto de pista (placeholder) */
+input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+/* Efecto al pinchar dentro de la caja para escribir */
+input:focus {
+    box-shadow: 0 0 10px rgba(126, 217, 87, 0.6);
+}
+
+/* 6. EL BOTÓN */
+/* 6. LOS BOTONES (Principal y Secundario) */
+.grupo-botones {
+    display: flex;
+    flex-direction: column; /* Pone un botón debajo del otro */
+    gap: 15px; /* Espacio entre los botones */
+    margin-top: 15px;
+}
+
+/* Estilos comunes para ambos botones (tamaño, tipo de letra) */
+.btn-principal, .btn-secundario {
+    width: 100%;
+    padding: 15px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 10px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: transform 0.1s, box-shadow 0.3s;
+}
+
+/* Estilo específico del botón verde (Registrar/Entrar) */
+.btn-principal {
+    background-color: #7ed957;
+    color: #000000;
+    border: none;
+    box-shadow: 0 0 15px rgba(126, 217, 87, 0.5);
+}
+
+.btn-principal:active {
+    transform: scale(0.96);
+}
+
+/* Estilo específico del botón secundario (Volver) */
+.btn-secundario {
+    background-color: transparent; /* Fondo invisible */
+    color: #c4c4c4; /* Texto gris clarito */
+    border: 1px solid #c4c4c4; /* Borde gris fino */
+}
+
+.btn-secundario:hover {
+    color: white;
+    border-color: white; /* Se ilumina en blanco al pasar el ratón */
+}
+
+.btn-secundario:active {
+    transform: scale(0.96);
+}
+/* 7. ENLACES DE NAVEGACIÓN */
+.enlace-cambio {
+    margin-top: 25px;
+    font-size: 14px;
+    color: #c4c4c4;
+}
+
+.enlace-cambio a {
+    color: #7ed957; /* Verde Ecotopía */
+    text-decoration: none; /* Le quita el subrayado feo por defecto */
+    font-weight: bold;
+}
+
+.enlace-cambio a:hover {
+    text-decoration: underline; /* Solo se subraya cuando pasas el ratón por encima */
+    text-shadow: 0 0 8px rgba(126, 217, 87, 0.6); /* Brilla al pasar el ratón */
+}
+/* =========================================
+   8. PANTALLA PRINCIPAL (El Carné)
+   ========================================= */
+
+.app-principal {
+    max-width: 450px; /* Hacemos la tarjeta un poco más ancha para que quepa bien el contenido */
+    padding: 30px 20px;
+}
+
+/* El bloque del perfil superior */
+.perfil-usuario {
+    display: flex;
+    justify-content: space-between; /* Empuja el texto a la izquierda y el círculo a la derecha */
+    align-items: center;
+    background-color: rgba(126, 217, 87, 0.1); /* Fondo verde muy transparente */
+    padding: 20px;
+    border-radius: 15px;
+    border: 1px solid #7ed957;
+}
+
+.info-texto h3 {
+    color: white;
+    margin-bottom: 5px;
+    font-size: 18px;
+    text-transform: none; /* Quitamos las mayúsculas forzadas aquí */
+}
+
+.id-usuario, .rol-usuario {
+    color: #c4c4c4;
+    font-size: 12px;
+    margin-bottom: 3px;
+}
+
+/* El progreso circular simulado */
+.progreso-circular {
+    width: 65px;
+    height: 65px;
+    border-radius: 50%; /* Hace que sea un círculo perfecto */
+    border: 4px solid #7ed957;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    color: #7ed957;
+    box-shadow: 0 0 10px rgba(126, 217, 87, 0.4);
+}
+
+.separador {
+    border: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    margin: 25px 0;
+}
+
+.titulo-seccion {
+    color: #7ed957;
+    text-align: left;
+    margin-bottom: 15px;
+    font-size: 16px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Las cajitas de cada objetivo */
+.lista-objetivos {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.item-objetivo {
+    background-color: rgba(255, 255, 255, 0.05); /* Fondo gris translúcido */
+    padding: 15px;
+    border-radius: 10px;
+    text-align: left;
+    border-left: 4px solid #c4c4c4; /* Borde gris izquierdo indicando "incompleto" */
+}
+
+.item-objetivo.completado {
+    border-left: 4px solid #7ed957; /* Si tiene la clase "completado", el borde es verde neón */
+}
+
+.info-objetivo {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.info-objetivo h4 {
+    color: white;
+    font-size: 14px;
+}
+
+.info-objetivo p {
+    color: #7ed957;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+/* Diseño de la barra de progreso horizontal */
+.barra-fondo {
+    background-color: rgba(255, 255, 255, 0.2);
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden; /* Corta lo que se salga para mantener las esquinas redondas */
+}
+
+.barra-progreso {
+    background-color: #7ed957;
+    height: 100%;
+    box-shadow: 0 0 8px #7ed957; /* Brillo verde en la barra */
+    transition: width 0.5s ease-in-out; /* Animación suave al llenarse */
+}
+
+.mt-20 {
+    margin-top: 20px; /* Una clase de utilidad rápida para separar el botón de salir */
+}
+
+.btn-pequeno {
+    background-color: transparent;
+    color: #7ed957;
+    border: 1px solid #7ed957;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+/* =========================================
+   9. PANTALLA DE ADMIN
+   ========================================= */
+
+/* Estilos específicos para el Panel de Admin */
+.contenedor-lista {
+    margin-top: 15px;
+    max-height: 250px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+/* Estilo para cada estudiante en la lista */
+.fila-usuario {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.05); /* Fondo muy sutil */
+    padding: 12px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.fila-usuario span {
+    color: white;
+    font-size: 0.85em;
+    max-width: 60%;
+}
+
+.btn-puntos {
+    background: #62c566; /* El verde de Ecotopía */
+    color: #0d1a0e;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 0.75em;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-puntos:hover {
+    background: #a4f5a7;
+    transform: scale(1.05);
+}
+
+/* Personalizar la barra de desplazamiento (Scroll) */
+.contenedor-lista::-webkit-scrollbar {
+    width: 5px;
+}
+.contenedor-lista::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+}
+
+select.input-estilo {
+    background: rgba(0, 0, 0, 0.3);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 5px;
+    outline: none;
+    cursor: pointer;
+}
+
+select.input-estilo option {
+    background: #1a2e1b; /* Fondo oscuro para que se lea bien */
+    color: white;
+}
+
+
+/* VISION ACTIVIDADES EN PAGINA USUARIO */
+
+.contenedor-actividades {
+    margin-top: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.item-actividad {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 8px 12px;
+    border-radius: 15px;
+    font-size: 0.85em;
+    color: white;
+    border-left: 3px solid #62c566;
+}
+
+.pts-tag {
+    font-weight: bold;
+    color: #a4f5a7;
+    font-size: 0.8em;
+}
+
+.seccion-actividades h4 {
+    color: #62c566;
+    margin-top: 20px;
+    font-size: 0.9em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+#qrcode {
+    margin-top: 20px;
+    display: block; /* Cambia de flex a block */
+    background: white;
+    padding: 15px; /* Un poco más de aire */
+    border-radius: 10px;
+    width: 128px; /* Tamaño fijo igual al del JS */
+    height: 128px;
+    margin-inline: auto; /* Centrado */
+}
+
+/* Esto asegura que la imagen que crea la librería ocupe todo el div */
+#qrcode img {
+    width: 100%;
+    height: 100%;
+}

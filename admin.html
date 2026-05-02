@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Ecotopía</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body class="fondo-hoja"> <!-- Usamos el fondo de la hoja que ya tienes -->
+    <div class="contenedor-principal">
+        <div class="tarjeta login-box"> <!-- Reutilizamos 'tarjeta' y 'login-box' para el cristal esmerilado -->
+            <h2 class="titulo-verde">Panel de Control Ecotopía</h2>
+
+            <!-- SECCIÓN A: CREAR EVENTOS -->
+            <section class="seccion-admin" style="margin-bottom: 20px;">
+                <h3 style="color: white; font-size: 0.9em; margin-bottom: 10px;">1. Crear Nuevo Evento</h3>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <input type="text" id="nombre-evento" placeholder="Nombre del evento..." class="input-estilo" style="flex: 2;">
+                    <input type="number" id="puntos-evento" placeholder="Pts" class="input-estilo" style="flex: 0.5; min-width: 60px;" value="10">
+                </div>
+                <button class="btn-principal" onclick="crearEvento()" style="margin-top: 10px;">Guardar Evento</button>
+            </section>
+
+            <hr style="border: 0.5px solid rgba(255,255,255,0.2); margin: 20px 0;">
+
+            <!-- SECCIÓN B: GESTIÓN DE ACTIVIDADES -->
+            <section class="seccion-admin">
+                <h3 style="color: white; font-size: 0.9em; margin-bottom: 10px;">2. Registrar Asistencia por Evento</h3>
+                <div id="lista-eventos-admin" class="contenedor-lista">
+                    <p style="color: rgba(255,255,255,0.6);">Cargando eventos...</p>
+                </div>
+                <div id="reader" style="width: 100%; max-width: 400px; margin: auto; display: none;"></div>
+               
+            </section>
+            <hr style="border: 0.5px solid rgba(255,255,255,0.2); margin: 20px 0;">
+             <button id="btn-escanear" class="btn-principal" onclick="encenderCamara()">📷 Escanear QR de Usuario</button>
+            <hr style="border: 0.5px solid rgba(255,255,255,0.2); margin: 20px 0;">
+
+            <!-- SECCIÓN C: LISTA DE ESTUDIANTES -->
+            <section class="seccion-admin">
+                <h3 style="color: white; font-size: 0.9em; margin-bottom: 10px;">3. Ecotópicos</h3>
+                <div id="lista-usuarios" class="contenedor-lista">
+                    <p style="color: rgba(255,255,255,0.6);">Cargando estudiantes...</p>
+                </div>
+            </section>
+
+            <button class="btn-secundario" onclick="window.location.href='principal.html'" style="margin-top: 20px; width: 100%;">
+                Volver al Carné
+            </button>
+        </div>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>

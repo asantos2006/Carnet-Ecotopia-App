@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - Ecotópico</title>
+    <!-- ¡Aquí está el truco! Conectamos el MISMO archivo CSS -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+
+    <div class="tarjeta">
+        <img src="logo_ecotopia.png" alt="Logo Ecotopía" class="logo">
+        
+        <h2>Iniciar Sesión</h2>
+        
+        <!-- Llamamos a una función diferente en JavaScript -->
+        <form id="formulario-login" onsubmit="iniciarSesion(event)">
+            
+            <label for="email-login">Correo electrónico:</label>
+            <input type="email" id="email-login" placeholder="tu@email.com" required>
+            
+            <label for="password-login">Contraseña:</label>
+            <input type="password" id="password-login" placeholder="Tu contraseña" required>
+            
+            <!-- Usamos el mismo contenedor de botones -->
+            <div class="grupo-botones">
+                <!-- Le ponemos la clase "btn-principal" para que absorba el verde neón -->
+                <button type="submit" class="btn-principal">Entrar</button>
+                <button class="btn-secundario" onclick="accesoAdmin()" style="margin-top: px; background: rgba(255,255,255,0.1); border: 1px solid #62c566;">
+                    Acceso Administrador 🔒
+                </button>
+            </div>
+        </form>
+
+        <!-- Un texto para volver al registro si se equivocaron de pantalla -->
+        <p class="enlace-cambio">¿No tienes carné? <a href="registro.html">Regístrate aquí</a></p>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>

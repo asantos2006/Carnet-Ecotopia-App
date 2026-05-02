@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carné de Ecotópico</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+
+    <div class="tarjeta">
+        <!-- AQUÍ ESTÁ LA MAGIA NUEVA: Insertamos el logo -->
+        <img src="logo_ecotopia.png" alt="Logo Ecotopía" class="logo">
+        
+        <h2>Registro de Ecotópico</h2>
+        
+        <form id="formulario-registro" onsubmit="registrarUsuario(event)">
+            
+            <label for="nombre">Nombre completo:</label>
+            <input type="text" id="nombre" placeholder="Ej. Ana García" required>
+            
+            <label for="email">Correo electrónico:</label>
+            <input type="email" id="email" placeholder="tu@email.com" required>
+            
+            <label for="password">Contraseña:</label>
+            <input type="password" id="password" placeholder="Mínimo 6 caracteres" required>
+            
+            <!-- Contenedor para agrupar los dos botones en fila -->
+            <div class="grupo-botones">
+                <!-- Botón principal (verde) para registrarse -->
+                <button type="submit" class="btn-principal">Crear Carné</button>
+                
+                <!-- Botón secundario (transparente/borde) para volver al login -->
+                <button type="button" class="btn-secundario" onclick="window.location.href='index.html'">
+                    Volver al Login
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>
