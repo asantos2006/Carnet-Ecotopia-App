@@ -28,11 +28,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 console.log("¡Firebase conectado correctamente!");
-
-
-// Usamos "window." para que el HTML pueda ver la función desde el módulo
-// Añadimos "async" porque vamos a comunicarnos con internet
-
+const CORREO_ADMIN = "ecotopia.asociacion@gmail.com";
 
 // FUNCiÓN PARA REGISTRAR USUARIO
 
@@ -63,17 +59,25 @@ window.registrarUsuario = async function(event) {
             nombre: valorNombre,
             email: valorEmail,
             puntosTotales: 0,
-            rol: "Estudiante de Ecotopía"
+            fechaRegistro: new Date()
         });
 
         // 4. Si todo ha ido bien, avisamos y redirigimos
         alert("¡Registro exitoso, " + valorNombre + "! Entrando a tu carné...");
         window.location.href = "principal.html";
-
-    } catch (error) {
-        // Si la contraseña es muy corta o el correo ya existe, Firebase se quejará aquí
-        console.error("Error de Firebase:", error.message);
-        alert("No se pudo crear el carné. Intenta con una contraseña de 6 o más caracteres.");
+        } catch (error) {
+        console.error("Error de Firebase:", error.code);
+        
+        // Ahora Firebase te dirá exactamente qué falla
+        if (error.code === 'auth/email-already-in-use') {
+            alert("Este correo ya está registrado. Por favor, ve a 'Iniciar Sesión' o usa otro correo.");
+        } else if (error.code === 'auth/weak-password') {
+            alert("La contraseña es muy corta. Debe tener al menos 6 caracteres.");
+        } else if (error.code === 'auth/invalid-email') {
+            alert("El formato del correo electrónico no es válido.");
+        } else {
+            alert("Ups, hubo un error: " + error.message);
+        }
     }
 }
 
@@ -194,7 +198,7 @@ window.crearEvento = async function() {
         await setDoc(nuevoEventoRef, {
             nombre: nombreVal, // En español
             puntosRecompensa: puntosVal, // En español
-            date: new Date().toLocaleDateString()
+            date: new Date()
         });
         alert("Evento creado con éxito");
         document.getElementById('nombre-evento').value = "";
@@ -302,7 +306,7 @@ window.registrarAsistencia = async function(idEvento, nombreEvento, puntosASumar
             historial: arrayUnion({ // Llave en español[cite: 2]
                 nombre: nombreEvento, 
                 puntos: puntosASumar, 
-                fecha: new Date().toLocaleDateString() 
+                fecha: new Date()
             })
         });
         cargarPanelAdminCompleto();
@@ -353,20 +357,17 @@ window.recargarDatosManual = function() {
 }
 
 
-// DEFENSA CONTRA ENTRADAS EN VENTANA ADMIN POR URL
-
+// SEGURIDAD PARA ENTRAR EN ADMIN
 onAuthStateChanged(auth, async (user) => {
     const rutaPagina = window.location.pathname;
 
     if (user) {
         // --- CASO 1: ESTÁ EN LA PÁGINA ADMIN ---
         if (rutaPagina.includes("admin.html")) {
-            if (user.email === "ecotopia.asociacion@gmail.com") {
-                // Es el jefe, cargamos los datos
+            if (user.email === CORREO_ADMIN) {
                 cargarPanelAdminCompleto();
                 mostrarUsuariosAdmin();
             } else {
-                // Es un estudiante intentando colarse
                 alert("Acceso denegado. Zona exclusiva para administradores.");
                 window.location.href = "principal.html"; 
             }
@@ -375,12 +376,21 @@ onAuthStateChanged(auth, async (user) => {
         else if (rutaPagina.includes("principal.html")) {
             cargarDatosPerfil(user);
         } 
-        // --- CASO 3: ESTÁ EN EL LOGIN PERO YA TIENE SESIÓN ---
+        // --- CASO 3: ESTÁ EN EL LOGIN O REGISTRO PERO YA TIENE SESIÓN ---
         else if (rutaPagina.includes("index.html") || rutaPagina.includes("registro.html")) {
-            if (user.email === "ecotopia.asociacion@gmail.com") {
-                window.location.href = "admin.html"; // El admin va a su panel
+            
+            // LA CORRECCIÓN ESTÁ AQUÍ 👇
+            // Si acaba de registrarse, le decimos al Guardián que NO lo redirija.
+            // Dejamos que la función 'registrarUsuario' termine de guardar los datos en la nube.
+            if (rutaPagina.includes("registro.html")) {
+                return; // Esto "apaga" al guardián momentáneamente
+            }
+
+            // Si está en el login (index.html), sí lo redirigimos con normalidad
+            if (user.email === CORREO_ADMIN) {
+                window.location.href = "admin.html"; 
             } else {
-                window.location.href = "principal.html"; // El alumno va a su carné
+                window.location.href = "principal.html"; 
             }
         }
     } else {
@@ -388,7 +398,6 @@ onAuthStateChanged(auth, async (user) => {
         const estaEnLogin = rutaPagina.includes("index.html") || rutaPagina.includes("registro.html");
         
         if (!estaEnLogin) {
-            // Si intenta entrar a admin.html o principal.html sin cuenta, lo echamos
             window.location.href = "index.html";
         }
     }
