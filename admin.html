@@ -28,13 +28,9 @@
             <section class="seccion-admin">
                 <h3 style="color: white; font-size: 0.9em; margin-bottom: 10px;">2. Registrar Asistencia por Evento</h3>
                 <div id="lista-eventos-admin" class="contenedor-lista">
-                    <p style="color: rgba(255,255,255,0.6);">Cargando eventos...</p>
-                </div>
-                <div id="reader" style="width: 100%; max-width: 400px; margin: auto; display: none;"></div>
-               
+                    <p style="color: rgba(255,255,255,0.6);">Cargando eventos...</p> </div>
             </section>
-            <hr style="border: 0.5px solid rgba(255,255,255,0.2); margin: 20px 0;">
-             <button id="btn-escanear" class="btn-principal" onclick="encenderCamara()">📷 Escanear QR de Usuario</button>
+
             <hr style="border: 0.5px solid rgba(255,255,255,0.2); margin: 20px 0;">
 
             <!-- SECCIÓN C: LISTA DE ESTUDIANTES -->
@@ -46,11 +42,77 @@
             </section>
 
             <button class="btn-secundario" onclick="window.location.href='principal.html'" style="margin-top: 20px; width: 100%;">
-                Volver al Carné
+                Volver al Carnet
             </button>
         </div>
     </div>
 
+
+<!--Ventana Escaner QR-->
+
+    <div id="modal-escaner" class="modal-oculto">
+        <div class="contenido-modal">
+            <h3 id="titulo-modal-escaner" style="color: #62c566; margin-bottom: 10px;">Escaneando...</h3>
+            <p style="color: white; font-size: 0.8em; margin-bottom: 15px;">Apunta hacia el código QR.</p>
+            
+            <div id="reader" style="width: 100%; max-width: 300px; margin: auto; border-radius: 10px; overflow: hidden;"></div>
+            
+            <button class="btn-secundario mt-20" onclick="cerrarCamaraModal()" style="border-color: #ff4d4d; color: #ff4d4d;">
+                ❌ Cerrar Escáner
+            </button>
+        </div>
+    </div>
+
+    <!--Ventana Información del ecotopico-->
+
+    <div id="modal-info-usuario" class="modal-oculto">
+        <div class="contenido-modal" style="max-width: 400px; text-align: left;">
+            
+            <!-- Cabecera con datos del usuario -->
+            <h3 id="info-nombre" style="color: #62c566; margin-bottom: 5px; text-align: center; text-transform: uppercase;">Nombre</h3>
+            <p id="info-email" style="color: #c4c4c4; font-size: 0.9em; text-align: center; margin-bottom: 5px;">email@test.com</p>
+            <p id="info-fecha" style="color: #c4c4c4; font-size: 0.8em; text-align: center; margin-bottom: 20px;">Registrado el: --</p>
+
+            <!-- Tabla del Historial -->
+            <div style="max-height: 220px; overflow-y: auto; margin-bottom: 15px; padding-right: 5px;">
+                <table style="width: 100%; border-collapse: collapse; color: white; font-size: 0.9em;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid #62c566;">
+                            <th style="text-align: left; padding: 5px 0;">Evento Realizado</th>
+                            <th style="text-align: right; padding: 5px 0;">Puntos</th>
+                        </tr>
+                    </thead>
+                    <tbody id="info-tabla-historial">
+                        <!-- Aquí inyectaremos las filas desde JS -->
+                    </tbody>
+                    <tfoot>
+                        <tr style="border-top: 1px solid #62c566; font-weight: bold;">
+                            <td style="text-align: left; padding: 10px 0;">TOTAL ACUMULADO</td>
+                            <td id="info-total-puntos" style="text-align: right; padding: 10px 0; color: #62c566; font-size: 1.1em;">0 pts</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- Botón de Cerrar -->
+            <div style="text-align: center;">
+                <button class="btn-secundario" onclick="cerrarModalUsuario()" style="border-color: #ff4d4d; color: #ff4d4d; width: 100%;">
+                    ❌ Cerrar Ficha
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!--Notificación qr detectado-->
+
+    <div id="toast-notificacion" class="toast-oculto">
+        ✅ ¡Fichaje guardado!
+    </div>
+
     <script type="module" src="script.js"></script>
+
+
+
+
 </body>
 </html>

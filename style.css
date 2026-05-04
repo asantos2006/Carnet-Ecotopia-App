@@ -399,3 +399,91 @@ select.input-estilo option {
     width: 100%;
     height: 100%;
 }
+
+/* =========================================
+   10. MODAL DE CÁMARA Y NOTIFICACIÓN TOAST
+   ========================================= */
+
+/* La capa oscura que tapa el fondo */
+.modal-oculto {
+    display: none; /* Oculto por defecto */
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.85); 
+    z-index: 1000; /* Por encima de todo */
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(5px);
+}
+
+.contenido-modal {
+    background: rgba(13, 26, 14, 0.95);
+    padding: 20px;
+    border-radius: 20px;
+    border: 2px solid #62c566;
+    text-align: center;
+    width: 90%;
+    max-width: 350px;
+    box-shadow: 0 0 25px rgba(126, 217, 87, 0.4);
+}
+
+/* El mensajito verde que aparece abajo */
+.toast-oculto {
+    visibility: hidden;
+    min-width: 250px;
+    background-color: #62c566;
+    color: #0d1a0e;
+    text-align: center;
+    border-radius: 10px;
+    padding: 15px;
+    position: fixed;
+    z-index: 1001; /* Por encima de la cámara incluso */
+    bottom: -50px; /* Escondido por debajo de la pantalla */
+    left: 50%;
+    transform: translateX(-50%);
+    font-weight: bold;
+    opacity: 0;
+    transition: opacity 0.4s, bottom 0.4s;
+    box-shadow: 0 0 15px rgba(126, 217, 87, 0.6);
+}
+
+/* Cuando le añadamos esta clase por JS, flotará hacia arriba */
+.toast-visible {
+    visibility: visible;
+    opacity: 1;
+    bottom: 30px; 
+}
+
+/* =========================================
+   🎯 ESTILOS DEL ANILLO DE OBJETIVOS
+   ========================================= */
+.progreso-circular-wrapper {
+    position: relative;
+    width: 75px;  /* Puedes hacer el círculo más grande o pequeño cambiando esto */
+    height: 75px;
+    display: flex;
+    justify-content: center;
+    align-items: center; /* Estas dos líneas centran el 100% perfectamente */
+    margin: 0 auto;
+}
+
+.anillo-relleno {
+    position: absolute;
+    top: 0; 
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: conic-gradient(#62c566 0%, rgba(255,255,255,0.2) 0%);
+    /* Esto hace el "agujero" en el centro para que se vea el fondo de hojas */
+    -webkit-mask: radial-gradient(closest-side, transparent 82%, black 83%);
+    mask: radial-gradient(closest-side, transparent 82%, black 83%);
+}
+
+#porcentaje-texto {
+    position: relative;
+    z-index: 1;
+    font-weight: bold;
+    font-size: 1.1em;
+    color: white;
+}

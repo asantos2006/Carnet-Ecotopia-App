@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Carné - Ecotópico</title>
+    <title>Mi Carnet Ecotópico</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
     <!-- Librería QR -->
@@ -18,24 +18,53 @@
         <div class="perfil-usuario">
             <div class="info-texto">
                 <h3 id="nombre-usuario">Cargando...</h3>
-                <p class="id-usuario">¡¡A por esos 500 ecopoints!!</p>
+                <p class="id-usuario"> </p>
+                
+                <p id = "texto-meta"> ¡¡Marcaté un Objetivo de EcoPoints!!</p>
             </div>
-            <div class="progreso-circular">
+            <div class="progreso-circular-wrapper">
+                <!-- Este es el anillo que cambiará de color -->
+                <div id="anillo-progreso" class="anillo-relleno"></div>
+                <!-- Este es el texto que ahora estará centrado perfectamente -->
                 <span id="porcentaje-texto">0%</span>
             </div>
+            
         </div>
 
         <hr class="separador">
 
         <!-- SECCIÓN 2: Lista de Objetivos -->
         <div class="lista-objetivos">
-            <h3 class="titulo-seccion">Mis Objetivos</h3>
+            <!-- Botón para abrir los objetivos -->
+            <div style="text-align: center; margin: 20px 0;">
+                <button class="btn-secundario" onclick="abrirModalObjetivos()" style="border-color: #a4f5a7; color: #a4f5a7;">
+                    🎯 Mis Objetivos
+                </button>
+            </div>
+            <div id="modal-objetivos" class="modal-oculto">
+                <div class="contenido-modal" style="max-width: 400px; text-align: left;">
+                    <h3 style="color: #62c566; text-align: center; margin-bottom: 10px;">🎯 Elige tus Metas</h3>
+                    <p style="color: #c4c4c4; font-size: 0.8em; text-align: center; margin-bottom: 15px;">Marca los eventos en los que quieres participar. Tu meta se ajustará automáticamente.</p>
+                    
+                    <!-- Lista de eventos con Checkboxes -->
+                    <div id="lista-eventos-objetivos" style="max-height: 250px; overflow-y: auto; margin-bottom: 15px; padding-right: 5px;">
+                        <!-- JavaScript inyectará aquí los eventos -->
+                    </div>
+
+                    <!-- Botones de Acción -->
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn-secundario" onclick="cerrarModalObjetivos()" style="flex: 1; border-color: #ff4d4d; color: #ff4d4d;">Cancelar</button>
+                        <button class="btn-puntos" onclick="guardarObjetivos()" style="flex: 1;">Guardar Metas</button>
+                    </div>
+                </div>
+            </div>
+            
             <h4>Actividades Realizadas</h4>
             <div id="lista-actividades-usuario" class="contenedor-actividades">
                 <p id="mensaje-vacio" style="font-size: 0.8em; color: rgba(255,255,255,0.5);">Aún no has participado en eventos.</p>
             </div>
         </div> 
-        <!-- Opción: Botón justo encima del historial -->
+        <!-- Opción: Boton actualizar -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
             <h3 class="titulo-seccion">Mis Objetivos</h3>
             <button class="btn-puntos" onclick="recargarDatosManual()" style="padding: 5px 10px; font-size: 0.7em;">
