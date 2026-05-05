@@ -609,19 +609,13 @@ window.mostrarToastNotificacion = function(mensaje) {
 // RECARGA DE DATOS MANUEAL EN VENTANA USUARIO
 
 window.recargarDatosManual = function() {
-    const user = auth.currentUser; // Miramos quién es el usuario actual
-    
+    const user = auth.currentUser;
     if (user) {
-        // Mostramos un pequeño aviso visual o cambiamos el texto del botón
-        console.log("Actualizando datos desde Firebase...");
-        
-        // Llamamos a la función que ya teníamos para pintar todo de nuevo[cite: 2]
-        window.cargarDatosPerfil(user); 
-        
-        // Opcional: Un alert pequeño o un toast si quieres confirmar al usuario
-        // alert("¡Datos actualizados!"); 
+        // Limpiamos la bandera del QR para que pueda refrescarse si es necesario
+        qrYaGenerado = false; 
+        cargarDatosPerfil(user); 
     } else {
-        window.location.href = "index.html"; // Si no hay usuario, al login (nuevo index)[cite: 2]
+        window.location.href = "index.html";
     }
 }
 
@@ -780,10 +774,13 @@ window.cerrarModalObjetivos = function() {
 
 // SEGURIDAD PARA ENTRAR EN ADMIN
 onAuthStateChanged(auth, async (user) => {
-    const rutaPagina = window.location.pathname;
+    // Obtenemos la ruta y la limpiamos de posibles "/" finales o dominios
+    const rutaPagina = window.location.pathname.toLowerCase();
 
     if (user) {
-        // --- CASO 1: ESTÁ EN LA PÁGINA ADMIN ---
+        console.log("Guardián: Usuario detectado ->", user.email);
+
+        // --- CASO 1: ACCESO A ADMIN ---
         if (rutaPagina.includes("admin.html")) {
             if (user.email === CORREO_ADMIN) {
                 cargarPanelAdminCompleto();
@@ -793,21 +790,16 @@ onAuthStateChanged(auth, async (user) => {
                 window.location.href = "principal.html"; 
             }
         } 
-        // --- CASO 2: ESTÁ EN EL CARNÉ ---
+        // --- CASO 2: ACCESO AL CARNÉ ---
         else if (rutaPagina.includes("principal.html")) {
             cargarDatosPerfil(user);
         } 
-        // --- CASO 3: ESTÁ EN EL LOGIN O REGISTRO PERO YA TIENE SESIÓN ---
-        else if (rutaPagina.includes("index.html") || rutaPagina.includes("registro.html")) {
+        // --- CASO 3: REDIRECCIÓN DESDE LOGIN/REGISTRO/RAÍZ ---
+        // Si estamos en el index, en la raíz "/" o en registro, y YA hay usuario:
+        else if (rutaPagina.includes("index.html") || rutaPagina === "/" || rutaPagina === "" || rutaPagina.endsWith("/")) {
             
-            // LA CORRECCIÓN ESTÁ AQUÍ 👇
-            // Si acaba de registrarse, le decimos al Guardián que NO lo redirija.
-            // Dejamos que la función 'registrarUsuario' termine de guardar los datos en la nube.
-            if (rutaPagina.includes("registro.html")) {
-                return; // Esto "apaga" al guardián momentáneamente
-            }
-
-            // Si está en el login (index.html), sí lo redirigimos con normalidad
+            console.log("Guardián: Redirigiendo a la zona correspondiente...");
+            
             if (user.email === CORREO_ADMIN) {
                 window.location.href = "admin.html"; 
             } else {
@@ -816,9 +808,11 @@ onAuthStateChanged(auth, async (user) => {
         }
     } else {
         // --- SI NO HAY NADIE LOGUEADO ---
-        const estaEnLogin = rutaPagina.includes("index.html") || rutaPagina.includes("registro.html");
+        // Si intenta entrar a principal o admin sin estar logueado, al login.
+        const zonaProtegida = rutaPagina.includes("principal.html") || rutaPagina.includes("admin.html");
         
-        if (!estaEnLogin) {
+        if (zonaProtegida) {
+            console.log("Guardián: Sin sesión. Volviendo al login.");
             window.location.href = "index.html";
         }
     }

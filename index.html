@@ -26,9 +26,11 @@
             
             <!-- Usamos el mismo contenedor de botones -->
             <div class="grupo-botones">
-                <!-- Le ponemos la clase "btn-principal" para que absorba el verde neón -->
-                <button type="submit" class="btn-principal">Entrar</button>
-                <button type="button" class="btn-secundario" onclick="accesoAdmin()" style="margin-top: px; background: rgba(255,255,255,0.1); border: 1px solid #62c566;">
+                <!-- 1. Le añadimos el onclick para que responda al ratón -->
+                <button type="button" class="btn-principal" onclick="iniciarSesion(event)">Entrar</button>
+                
+                <!-- 2. Arreglamos el de Admin (asegúrate de que también pase el event) -->
+                <button type="button" class="btn-secundario" onclick="accesoAdmin(event)" style="margin-top: 10px; background: rgba(255,255,255,0.1); border: 1px solid #62c566;">
                     Acceso Administrador 🔒
                 </button>
             </div>
