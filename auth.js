@@ -19,18 +19,18 @@ window.registrarUsuario = async function(event) {
             fechaRegistro: new Date()
         });
 
-        alert("¡Registro exitoso, " + valorNombre + "! Entrando a tu carné...");
+        mostrarToastNotificacion(`¡Registro exitoso, ${valorNombre}! Entrando a tu carné...`, "exito");
         window.location.href = "principal.html";
 
     } catch (error) {
         if (error.code === 'auth/email-already-in-use') {
-            alert("Este correo ya está registrado. Por favor, ve a 'Iniciar Sesión' o usa otro correo.");
+            mostrarToastNotificacion("Este correo ya está registrado. Ve a Iniciar Sesión o usa otro correo.", "error");
         } else if (error.code === 'auth/weak-password') {
-            alert("La contraseña es muy corta. Debe tener al menos 6 caracteres.");
+            mostrarToastNotificacion("La contraseña es muy corta. Mínimo 6 caracteres.", "error");
         } else if (error.code === 'auth/invalid-email') {
-            alert("El formato del correo electrónico no es válido.");
+            mostrarToastNotificacion("El formato del correo electrónico no es válido.", "error");
         } else {
-            alert("Ups, hubo un error: " + error.message);
+            mostrarToastNotificacion("Ups, hubo un error. Inténtalo de nuevo.", "error");
         }
     }
 }
@@ -43,7 +43,7 @@ window.iniciarSesion = async function(event) {
     try {
         await signInWithEmailAndPassword(auth, email, pass);
     } catch (error) {
-        alert("Correo o contraseña incorrectos");
+        mostrarToastNotificacion("Correo o contraseña incorrectos.", "error");
     }
 }
 
@@ -58,6 +58,30 @@ window.cerrarSesion = async function() {
     }
 }
 
+window.mostrarToastNotificacion = function(mensaje, tipo = "exito") {
+    const toast = document.getElementById('toast-notificacion');
+    if (!toast) return;
+
+    // Color según el tipo
+    if (tipo === "exito") {
+        toast.style.backgroundColor = "#62c566";
+        toast.style.color = "#0d1a0e";
+    } else if (tipo === "error") {
+        toast.style.backgroundColor = "#ff4d4d";
+        toast.style.color = "white";
+    } else if (tipo === "aviso") {
+        toast.style.backgroundColor = "#ffcc00";
+        toast.style.color = "#000";
+    }
+
+    toast.innerText = mensaje;
+    toast.classList.add('toast-visible');
+
+    setTimeout(() => {
+        toast.classList.remove('toast-visible');
+    }, 3000);
+}
+
 onAuthStateChanged(auth, async (user) => {
     const rutaPagina = window.location.pathname.toLowerCase();
 
@@ -67,7 +91,7 @@ onAuthStateChanged(auth, async (user) => {
                 if (typeof cargarPanelAdminCompleto === "function") cargarPanelAdminCompleto();
                 if (typeof mostrarUsuariosAdmin === "function") mostrarUsuariosAdmin();
             } else {
-                alert("Acceso denegado. Zona exclusiva para administradores.");
+                mostrarToastNotificacion("Acceso denegado. Zona exclusiva para administradores.", "error");
                 window.location.href = "principal.html";
             }
         }

@@ -1,3 +1,11 @@
+:root {
+    --color-primary: #7ed957;
+    --color-primary-dark: #62c566;
+    --color-primary-light: #a4f5a7;
+    --color-text-muted: #c4c4c4;
+    --color-bg-card: rgba(0, 0, 0, 0.75);
+    --color-bg-item: rgba(255, 255, 255, 0.05);
+}
 /* 1. REINICIO GENERAL */
 * {
     box-sizing: border-box;
@@ -31,7 +39,7 @@ body {
     text-align: center;
     
     /* El borde verde Ecotopía y su brillo neón */
-    border: 2px solid #7ed957; 
+    border: 2px solid var(--color-primary); 
     box-shadow: 0 0 25px rgba(126, 217, 87, 0.4); 
 }
 
@@ -42,7 +50,7 @@ body {
 }
 
 h2 {
-    color: #7ed957; /* Verde brillante */
+    color: var(--color-primary); /* Verde brillante */
     margin-bottom: 25px;
     font-size: 22px;
     letter-spacing: 1px; /* Separa un poco las letras para darle toque moderno */
@@ -59,7 +67,7 @@ form {
 label {
     margin-bottom: 8px;
     font-weight: bold;
-    color: #c4c4c4; /* Gris clarito para no competir con el blanco puro */
+    color: var(--color-text-muted); /* Gris clarito para no competir con el blanco puro */
     font-size: 14px;
 }
 
@@ -67,7 +75,7 @@ input {
     padding: 15px;
     margin-bottom: 20px;
     background-color: rgba(255, 255, 255, 0.08); /* Fondo casi transparente para ver la hoja debajo */
-    border: 1px solid #7ed957;
+    border: 1px solid var(--color-primary);
     border-radius: 10px;
     color: white; /* El texto que escribe el usuario */
     font-size: 16px;
@@ -108,7 +116,7 @@ input:focus {
 
 /* Estilo específico del botón verde (Registrar/Entrar) */
 .btn-principal {
-    background-color: #7ed957;
+    background-color: var(--color-primary);
     color: #000000;
     border: none;
     box-shadow: 0 0 15px rgba(126, 217, 87, 0.5);
@@ -121,8 +129,8 @@ input:focus {
 /* Estilo específico del botón secundario (Volver) */
 .btn-secundario {
     background-color: transparent; /* Fondo invisible */
-    color: #c4c4c4; /* Texto gris clarito */
-    border: 1px solid #c4c4c4; /* Borde gris fino */
+    color: var(--color-text-muted); /* Texto gris clarito */
+    border: 1px solid var(--color-text-muted); /* Borde gris fino */
 }
 
 .btn-secundario:hover {
@@ -137,11 +145,11 @@ input:focus {
 .enlace-cambio {
     margin-top: 25px;
     font-size: 14px;
-    color: #c4c4c4;
+    color: var(--color-text-muted);
 }
 
 .enlace-cambio a {
-    color: #7ed957; /* Verde Ecotopía */
+    color: var(--color-primary); /* Verde Ecotopía */
     text-decoration: none; /* Le quita el subrayado feo por defecto */
     font-weight: bold;
 }
@@ -167,7 +175,7 @@ input:focus {
     background-color: rgba(126, 217, 87, 0.1); /* Fondo verde muy transparente */
     padding: 20px;
     border-radius: 15px;
-    border: 1px solid #7ed957;
+    border: 1px solid var(--color-primary);
 }
 
 .info-texto h3 {
@@ -178,23 +186,9 @@ input:focus {
 }
 
 .id-usuario, .rol-usuario {
-    color: #c4c4c4;
+    color: var(--color-text-muted);
     font-size: 12px;
     margin-bottom: 3px;
-}
-
-/* El progreso circular simulado */
-.progreso-circular {
-    width: 65px;
-    height: 65px;
-    border-radius: 50%; /* Hace que sea un círculo perfecto */
-    border: 4px solid #7ed957;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-weight: bold;
-    color: #7ed957;
-    box-shadow: 0 0 10px rgba(126, 217, 87, 0.4);
 }
 
 .separador {
@@ -204,7 +198,7 @@ input:focus {
 }
 
 .titulo-seccion {
-    color: #7ed957;
+    color: var(--color-primary);
     text-align: left;
     margin-bottom: 15px;
     font-size: 16px;
@@ -219,18 +213,6 @@ input:focus {
     gap: 15px;
 }
 
-.item-objetivo {
-    background-color: rgba(255, 255, 255, 0.05); /* Fondo gris translúcido */
-    padding: 15px;
-    border-radius: 10px;
-    text-align: left;
-    border-left: 4px solid #c4c4c4; /* Borde gris izquierdo indicando "incompleto" */
-}
-
-.item-objetivo.completado {
-    border-left: 4px solid #7ed957; /* Si tiene la clase "completado", el borde es verde neón */
-}
-
 .info-objetivo {
     display: flex;
     justify-content: space-between;
@@ -243,7 +225,7 @@ input:focus {
 }
 
 .info-objetivo p {
-    color: #7ed957;
+    color: var(--color-primary);
     font-size: 12px;
     font-weight: bold;
 }
@@ -257,9 +239,9 @@ input:focus {
 }
 
 .barra-progreso {
-    background-color: #7ed957;
+    background-color: var(--color-primary);
     height: 100%;
-    box-shadow: 0 0 8px #7ed957; /* Brillo verde en la barra */
+    box-shadow: 0 0 8px var(--color-primary); /* Brillo verde en la barra */
     transition: width 0.5s ease-in-out; /* Animación suave al llenarse */
 }
 
@@ -269,8 +251,8 @@ input:focus {
 
 .btn-pequeno {
     background-color: transparent;
-    color: #7ed957;
-    border: 1px solid #7ed957;
+    color: var(--color-primary);
+    border: 1px solid var(--color-primary);
     padding: 6px 12px;
     border-radius: 6px;
     font-size: 12px;
@@ -308,7 +290,7 @@ input:focus {
 }
 
 .btn-puntos {
-    background: #62c566; /* El verde de Ecotopía */
+    background: var(--color-primary-dark); /* El verde de Ecotopía */
     color: #0d1a0e;
     border: none;
     padding: 6px 12px;
@@ -320,7 +302,7 @@ input:focus {
 }
 
 .btn-puntos:hover {
-    background: #a4f5a7;
+    background: var(--color-primary-light);
     transform: scale(1.05);
 }
 
@@ -366,17 +348,17 @@ select.input-estilo option {
     border-radius: 15px;
     font-size: 0.85em;
     color: white;
-    border-left: 3px solid #62c566;
+    border-left: 3px solid var(--color-primary-dark);
 }
 
 .pts-tag {
     font-weight: bold;
-    color: #a4f5a7;
+    color: var(--color-primary-light);
     font-size: 0.8em;
 }
 
 .seccion-actividades h4 {
-    color: #62c566;
+    color: var(--color-primary-dark);
     margin-top: 20px;
     font-size: 0.9em;
     text-transform: uppercase;
@@ -420,7 +402,7 @@ select.input-estilo option {
     background: rgba(13, 26, 14, 0.95);
     padding: 20px;
     border-radius: 20px;
-    border: 2px solid #62c566;
+    border: 2px solid var(--color-primary-dark);
     text-align: center;
     width: 90%;
     max-width: 350px;
@@ -431,7 +413,7 @@ select.input-estilo option {
 .toast-oculto {
     visibility: hidden;
     min-width: 250px;
-    background-color: #62c566;
+    background-color: var(--color-primary-dark);
     color: #0d1a0e;
     text-align: center;
     border-radius: 10px;
@@ -474,7 +456,7 @@ select.input-estilo option {
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background: conic-gradient(#62c566 0%, rgba(255,255,255,0.2) 0%);
+    background: conic-gradient(var(--color-primary-dark) 0%, rgba(255,255,255,0.2) 0%);
     /* Esto hace el "agujero" en el centro para que se vea el fondo de hojas */
     -webkit-mask: radial-gradient(closest-side, transparent 82%, black 83%);
     mask: radial-gradient(closest-side, transparent 82%, black 83%);
@@ -486,4 +468,71 @@ select.input-estilo option {
     font-weight: bold;
     font-size: 1.1em;
     color: white;
+}
+/* =========================================
+   UTILIDADES GENERALES
+   ========================================= */
+
+.flex-between {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.flex-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.flex-gap-8 {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.texto-muted {
+    color: var(--color-text-muted);
+    font-size: 0.9em;
+}
+
+.texto-verde {
+    color: var(--color-primary-dark);
+}
+
+.texto-verde-claro {
+    color: var(--color-primary-light);
+    font-weight: bold;
+}
+
+.ancho-completo {
+    width: 100%;
+}
+
+.btn-icono-rojo {
+    background: transparent;
+    border: 1px solid #ff4d4d;
+    padding: 4px 8px;
+    font-size: 1.1em;
+    color: #ff4d4d;
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+.btn-icono-verde {
+    background: transparent;
+    border: 1px solid var(--color-primary-dark);
+    padding: 4px 8px;
+    font-size: 1.1em;
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+.tag-puntos {
+    background: rgba(255,255,255,0.1);
+    padding: 4px 8px;
+    border-radius: 10px;
+    font-size: 0.7em;
+    color: white;
+    white-space: nowrap;
 }

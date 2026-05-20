@@ -9,7 +9,7 @@ window.crearEvento = async function() {
     const nombreVal = document.getElementById('nombre-evento').value.trim();
     const puntosVal = parseInt(document.getElementById('puntos-evento').value);
 
-    if (!nombreVal || isNaN(puntosVal)) return alert("Rellena nombre y puntos");
+    if (!nombreVal || isNaN(puntosVal)) return mostrarToastNotificacion("Rellena el nombre y los puntos del evento.", "aviso");
 
     try {
         const nuevoEventoRef = doc(collection(db, "eventos"));
@@ -18,7 +18,7 @@ window.crearEvento = async function() {
             puntosRecompensa: puntosVal,
             date: new Date()
         });
-        alert("Evento creado con éxito");
+        mostrarToastNotificacion("✅ Evento creado con éxito.", "exito");
         document.getElementById('nombre-evento').value = "";
         document.getElementById('puntos-evento').value = "10";
         cargarPanelAdminCompleto();
@@ -45,7 +45,7 @@ window.mostrarUsuariosAdmin = async function() {
                         <span class="btn-puntos" style="cursor: default; pointer-events: none; font-size: 0.8em; padding: 5px 12px;">
                             ${puntosTotales} pts
                         </span>
-                        <button class="btn-puntos" onclick="abrirModalUsuario('${usuarioDoc.id}')" style="background: transparent; border: 1px solid #62c566; padding: 4px 8px; font-size: 1em;">
+                        <button class="btn-puntos" onclick="abrirModalUsuario('${usuarioDoc.id}')" style="background: transparent; border: 1px solid var(--color-primary-dark); padding: 4px 8px; font-size: 1em;">
                             ℹ️
                         </button>
                     </div>
@@ -84,20 +84,18 @@ window.cargarPanelAdminCompleto = async function() {
             html += `
                 <div class="fila-usuario">
                     <div style="width: 100%;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                            <strong style="color: #62c566; font-size: 0.95em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; padding-right: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; gap: 8px;">
+                            <strong style="color: var(--color-primary-dark); font-size: 0.95em; flex: 1; word-break: break-word;">
                                 ${nombreEvento}
                             </strong>
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <button class="btn-puntos" onclick="borrarEvento('${idEvento}', '${nombreEvento}')" style="background: transparent; border: 1px solid #ff4d4d; padding: 4px 8px; font-size: 1.1em; color: #ff4d4d;">
+                            <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+                                <button class="btn-icono-rojo" onclick="borrarEvento('${idEvento}', '${nombreEvento}')">
                                     🗑️
                                 </button>
-                                <button class="btn-puntos" onclick="abrirCamaraModal('${idEvento}', '${nombreEvento}', ${puntosEvento})" style="background: transparent; border: 1px solid #62c566; padding: 4px 8px; font-size: 1.1em;">
+                                <button class="btn-icono-verde" onclick="abrirCamaraModal('${idEvento}', '${nombreEvento}', ${puntosEvento})">
                                     📷
                                 </button>
-                                <span style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 10px; font-size: 0.7em; color: white; white-space: nowrap;">
-                                    ${puntosEvento} pts
-                                </span>
+                                <span class="tag-puntos">${puntosEvento} pts</span>
                             </div>
                         </div>
                         <div style="display: flex; gap: 5px; width: 100%;">
@@ -158,13 +156,13 @@ window.registrarAsistenciaManual = async function(idEvento, nombreEvento, puntos
     const resultado = await procesarFichaje(idUsuario, nombreEvento, puntosASumar);
 
     if (resultado.exito) {
-        alert(`✅ ${resultado.mensaje}`);
+        mostrarToastNotificacion(resultado.mensaje, "exito");
         cargarPanelAdminCompleto();
         mostrarUsuariosAdmin();
     } else if (resultado.tipo === "duplicado") {
-        alert(`¡Cuidado! El estudiante ya tiene registrado el evento "${nombreEvento}".`);
+        mostrarToastNotificacion(`El estudiante ya tiene registrado "${nombreEvento}".`, "aviso");
     } else {
-        alert(`❌ ${resultado.mensaje}`);
+        mostrarToastNotificacion(resultado.mensaje, "error");
     }
 }
 
@@ -231,11 +229,11 @@ window.borrarFichajeManual = async function(idUsuario, nombreEvento) {
     const resultado = await procesarBorradoFichaje(idUsuario, nombreEvento);
 
     if (resultado.exito) {
-        alert(`✅ ${resultado.mensaje}`);
+        mostrarToastNotificacion(resultado.mensaje, "exito");
         abrirModalUsuario(idUsuario);
         mostrarUsuariosAdmin();
     } else {
-        alert(`❌ ${resultado.mensaje}`);
+        mostrarToastNotificacion(resultado.mensaje, "error");
     }
 }
 
@@ -286,7 +284,7 @@ window.abrirCamaraModal = function(idEvento, nombreEvento, puntosEvento) {
         }
     ).catch(err => {
         console.error("Error de cámara:", err);
-        alert("No se pudo encender la cámara.");
+        mostrarToastNotificacion("No se pudo encender la cámara.", "error");
         cerrarCamaraModal();
     });
 }
@@ -300,15 +298,6 @@ window.cerrarCamaraModal = function() {
     }
     document.getElementById('modal-escaner').style.display = 'none';
     eventoEscaneandoActual = null;
-}
-
-window.mostrarToastNotificacion = function(mensaje) {
-    const toast = document.getElementById('toast-notificacion');
-    toast.innerText = mensaje;
-    toast.classList.add('toast-visible');
-    setTimeout(() => {
-        toast.classList.remove('toast-visible');
-    }, 3000);
 }
 
 window.abrirModalUsuario = async function(idUsuario) {
@@ -341,7 +330,7 @@ window.abrirModalUsuario = async function(idUsuario) {
                     html += `
                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
                             <td style="padding: 8px 0; color: #c4c4c4;">🌿 ${act.nombre}</td>
-                            <td style="text-align: right; padding: 8px 0; color: #a4f5a7; font-weight: bold; display: flex; justify-content: flex-end; align-items: center; gap: 10px;">
+                            <td style="text-align: right; padding: 8px 0; color: var(--color-primary-light); font-weight: bold; display: flex; justify-content: flex-end; align-items: center; gap: 10px;">
                                 +${act.puntos}
                                 <button onclick="borrarFichajeManual('${idUsuario}', '${act.nombre}')" style="background: transparent; border: none; color: #ff4d4d; cursor: pointer; font-size: 1.1em;" title="Borrar este fichaje">
                                     🗑️
@@ -358,7 +347,7 @@ window.abrirModalUsuario = async function(idUsuario) {
         }
     } catch (error) {
         console.error("Error al cargar info del usuario:", error);
-        alert("Hubo un error al extraer la ficha del estudiante.");
+        mostrarToastNotificacion("Error al cargar la ficha del estudiante.", "error");
     }
 }
 

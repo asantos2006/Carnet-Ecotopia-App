@@ -2,7 +2,6 @@ import { doc, getDoc, updateDoc, collection, getDocs } from "https://www.gstatic
 import { auth, db } from "./firebase.config.js";
 
 let qrYaGenerado = false;
-let usuarioConectadoActual = null;
 
 window.cargarDatosPerfil = async function(user) {
     if (!user) return;
@@ -43,7 +42,7 @@ window.actualizarProgresoUI = function(datos) {
 
         if (elementoPorcentaje) elementoPorcentaje.innerText = `${Math.floor(porcentaje)}%`;
         if (anilloProgreso) {
-            anilloProgreso.style.background = `conic-gradient(#62c566 ${porcentaje}%, rgba(255,255,255,0.2) ${porcentaje}%)`;
+            anilloProgreso.style.background = `conic-gradient(var(--color-primary-dark) ${porcentaje}%, rgba(255,255,255,0.2) ${porcentaje}%)`;
         }
     }
 }
@@ -64,7 +63,7 @@ window.actualizarHistorialUI = function(historial) {
         html += `
             <div class="item-actividad" style="display: flex; justify-content: space-between; margin-bottom: 8px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px;">
                 <span>🌿 ${actividad.nombre}</span>
-                <span style="color: #62c566; font-weight: bold;">+${actividad.puntos}</span>
+                <span style="color: var(--color-primary-dark); font-weight: bold;">+${actividad.puntos}</span>
             </div>
         `;
     });
@@ -101,9 +100,8 @@ window.recargarDatosManual = function() {
 
 window.abrirModalObjetivos = async function() {
     const user = auth.currentUser;
-    if (!user) return alert("Debes iniciar sesión primero");
+    if (!user) return mostrarToastNotificacion("Debes iniciar sesión primero.", "error");
 
-    usuarioConectadoActual = user.uid;
     document.getElementById('modal-objetivos').style.display = 'flex';
     const contenedorLista = document.getElementById('lista-eventos-objetivos');
     contenedorLista.innerHTML = "<p style='text-align:center; color:white;'>Cargando eventos...</p>";
@@ -131,7 +129,7 @@ window.abrirModalObjetivos = async function() {
                     <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: white; width: 100%;">
                         <input type="checkbox" class="checkbox-objetivo" value="${doc.id}" data-puntos="${puntosDelEvento}" ${estaMarcado} style="width: 18px; height: 18px;">
                         <span style="flex: 1;">${evento.nombre}</span>
-                        <span style="color: #a4f5a7; font-weight: bold;">${puntosDelEvento} pts</span>
+                        <span style="color: var(--color-primary-light); font-weight: bold;">${puntosDelEvento} pts</span>
                     </label>
                 </div>
             `;
@@ -146,7 +144,8 @@ window.abrirModalObjetivos = async function() {
 }
 
 window.guardarObjetivos = async function() {
-    if (!usuarioConectadoActual) return;
+    const user = auth.currentUser;
+    if (!user) return;
 
     try {
         const checkboxes = document.querySelectorAll('.checkbox-objetivo:checked');
@@ -158,7 +157,7 @@ window.guardarObjetivos = async function() {
             totalPuntosMeta += parseInt(box.getAttribute('data-puntos')) || 0;
         });
 
-        const userRef = doc(db, "usuarios", usuarioConectadoActual);
+        const userRef = doc(db, "usuarios", user.uid);  // 👈 aquí
         await updateDoc(userRef, {
             objetivosId: idsMarcados,
             metaPuntos: totalPuntosMeta
@@ -169,7 +168,7 @@ window.guardarObjetivos = async function() {
 
     } catch (error) {
         console.error("Error al guardar metas:", error);
-        alert("❌ Hubo un error al guardar tus objetivos.");
+        mostrarToastNotificacion("Hubo un error al guardar tus objetivos.", "error");
     }
 }
 
