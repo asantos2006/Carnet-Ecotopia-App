@@ -92,23 +92,6 @@ window.iniciarSesion = async function(event) {
     }
 }
 
-window.accesoAdmin = async function(event) {
-    if (event) event.preventDefault();
-    let email = document.getElementById('email-login').value;
-    let pass = document.getElementById('password-login').value;
-
-    if (!email || !pass) {
-        return alert("Para entrar como administrador, escribe tu correo y contraseña y pulsa este botón.");
-    }
-
-    try {
-        await signInWithEmailAndPassword(auth, email, pass);
-        // El Guardián Único detectará que eres tú y te abrirá la puerta.
-    } catch (error) {
-        alert("Credenciales incorrectas.");
-    }
-}
-
 window.cerrarSesion = async function() {
     try {
         await signOut(auth); // 1. Avisamos a Firebase
@@ -193,15 +176,17 @@ window.actualizarHistorialUI = function(historial) {
 
     contenedorActividades.innerHTML = ""; // Limpiamos
     const historialInvertido = [...historial].reverse();
+    let html = "";
     
     historialInvertido.forEach(actividad => {
-        contenedorActividades.innerHTML += `
+        html += `
             <div class="item-actividad" style="display: flex; justify-content: space-between; margin-bottom: 8px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px;">
                 <span>🌿 ${actividad.nombre}</span> 
                 <span style="color: #62c566; font-weight: bold;">+${actividad.puntos}</span>
             </div>
         `;
     });
+    contenedorActividades.innerHTML = html;
 };
 
 // 4. DibujaQR
@@ -235,13 +220,13 @@ window.crearEvento = async function() {
     try {
         const nuevoEventoRef = doc(collection(db, "eventos"));
         await setDoc(nuevoEventoRef, {
-            nombre: nombreVal, // En español
-            puntosRecompensa: puntosVal, // En español
+            nombre: nombreVal, 
+            puntosRecompensa: puntosVal,
             date: new Date()
         });
         alert("Evento creado con éxito");
         document.getElementById('nombre-evento').value = "";
-        document.getElementById('puntos-evento').value = "";
+        document.getElementById('puntos-evento').value = "10";
         cargarPanelAdminCompleto(); 
     } catch (e) { console.error(e); }
 }
@@ -251,6 +236,7 @@ window.mostrarUsuariosAdmin = async function() {
     try {
         const querySnapshot = await getDocs(collection(db, "usuarios"));
         contenedor.innerHTML = ""; // Limpiamos el "Cargando..."
+        let html = "";
 
         querySnapshot.forEach((usuarioDoc) => {
             const datos = usuarioDoc.data();
@@ -261,7 +247,7 @@ window.mostrarUsuariosAdmin = async function() {
 
             // Creamos la fila alineada. El botón ahora es una "etiqueta" visual.
             // Creamos la fila alineada. Ahora añadimos el botón "ℹ️"
-            contenedor.innerHTML += `
+            html += `
                 <div class="fila-usuario" style="display: flex; justify-content: space-between; align-items: center;">
                     <span style="color: white; font-size: 0.9em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;">
                         <strong>${nombreUsuario}</strong>
@@ -278,6 +264,8 @@ window.mostrarUsuariosAdmin = async function() {
                 </div>
             `;
         });
+        contenedor.innerHTML = html;
+
     } catch (e) { 
         contenedor.innerHTML = "<p style='color: red;'>Error al cargar usuarios.</p>";
         console.error("Error al mostrar usuarios:", e); 
@@ -451,30 +439,31 @@ window.registrarAsistenciaQR = async function(idUsuarioEscaneado, evento) {
 // Eliminar Asistencia
 
 // Función "ciega": Solo quita un evento de la mochila de un usuario y resta los puntos
-window.procesarBorradoFichaje = async function(idUsuario, nombreEvento) {
+window.procesarBorradoFichaje = async function(idUsuario, nombreEvento, historialPrevio = null) {
     try {
         const userRef = doc(db, "usuarios", idUsuario);
-        const docSnap = await getDoc(userRef);
 
-        if (!docSnap.exists()) return { exito: false, mensaje: "Usuario no encontrado" };
+        // Si no nos pasan el historial, lo leemos de Firestore
+        let historialActual;
+        if (historialPrevio !== null) {
+            historialActual = historialPrevio;
+        } else {
+            const docSnap = await getDoc(userRef);
+            if (!docSnap.exists()) return { exito: false, mensaje: "Usuario no encontrado" };
+            historialActual = docSnap.data().historial || [];
+        }
 
-        const datosUsuario = docSnap.data();
-        const historialActual = datosUsuario.historial || [];
-
-        // 1. Verificamos si realmente lo tiene
+        // Verificamos si realmente tiene el evento
         const tieneElEvento = historialActual.some(act => act.nombre === nombreEvento);
         if (!tieneElEvento) {
             return { exito: false, mensaje: "El usuario no tiene este evento en su historial" };
         }
 
-        // 2. Extraemos los puntos que valía para restarlos correctamente
+        // Extraemos los puntos y filtramos el historial
         const eventoData = historialActual.find(act => act.nombre === nombreEvento);
         const puntosARestar = eventoData.puntos;
-
-        // 3. Filtramos el historial para quitar ese evento concreto
         const nuevoHistorial = historialActual.filter(act => act.nombre !== nombreEvento);
 
-        // 4. Guardamos en Firebase el historial limpio y restamos los puntos
         await updateDoc(userRef, {
             historial: nuevoHistorial,
             puntosTotales: increment(-puntosARestar)
@@ -524,7 +513,7 @@ window.borrarEvento = async function(idEvento, nombreEvento) {
 
                 // Si este alumno tiene el evento, le encargamos la tarea a nuestro Motor Central
                 if (historial.some(act => act.nombre === nombreEvento)) {
-                    promesasDeBorrado.push(procesarBorradoFichaje(usuarioDoc.id, nombreEvento));
+                    promesasDeBorrado.push(procesarBorradoFichaje(usuarioDoc.id, nombreEvento, historial));
                 }
             });
 
@@ -652,8 +641,9 @@ window.abrirModalUsuario = async function(idUsuario) {
             } else {
                 // Invertimos para que los últimos eventos salgan los primeros
                 const historialInvertido = [...historial].reverse(); 
+                let html = ""
                 historialInvertido.forEach(act => {
-                    tbody.innerHTML += `
+                    html += `
                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
                             <td style="padding: 8px 0; color: #c4c4c4;">🌿 ${act.nombre}</td>
                             <td style="text-align: right; padding: 8px 0; color: #a4f5a7; font-weight: bold; display: flex; justify-content: flex-end; align-items: center; gap: 10px;">
@@ -666,6 +656,7 @@ window.abrirModalUsuario = async function(idUsuario) {
                         </tr>
                     `;
                 });
+                tbody.innerHTML = html;
             }
 
             // 4. Rellenamos el total
@@ -715,6 +706,7 @@ window.abrirModalObjetivos = async function() {
         }
 
         // 3. Dibujamos cada evento con su checkbox
+        let html = "";
         eventosSnapshot.forEach(doc => {
             const evento = doc.data();
             const estaMarcado = objetivosMarcados.includes(doc.id) ? "checked" : "";
@@ -722,7 +714,7 @@ window.abrirModalObjetivos = async function() {
             // ¡EL ARREGLO ESTÁ AQUÍ! Usamos 'puntosRecompensa' tal y como está en tu Base de Datos
             const puntosDelEvento = evento.puntosRecompensa || 0;
             
-            contenedorLista.innerHTML += `
+            html += `
                 <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin-bottom: 5px;">
                     <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: white; width: 100%;">
                         <input type="checkbox" class="checkbox-objetivo" value="${doc.id}" data-puntos="${puntosDelEvento}" ${estaMarcado} style="width: 18px; height: 18px;">
@@ -732,6 +724,7 @@ window.abrirModalObjetivos = async function() {
                 </div>
             `;
         });
+        contenedorLista.innerHTML = html;
     } catch (error) {
         console.error("Error al cargar objetivos:", error);
         contenedorLista.innerHTML = "<p style='color:#ff4d4d;'>Error al cargar los eventos.</p>";

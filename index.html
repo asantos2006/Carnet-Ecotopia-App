@@ -30,7 +30,7 @@
                 <button type="button" class="btn-principal" onclick="iniciarSesion(event)">Entrar</button>
                 
                 <!-- 2. Arreglamos el de Admin (asegúrate de que también pase el event) -->
-                <button type="button" class="btn-secundario" onclick="accesoAdmin(event)" style="margin-top: 10px; background: rgba(255,255,255,0.1); border: 1px solid #62c566;">
+                <button type="button" class="btn-secundario" onclick=" iniciarSesion(event)" style="margin-top: 10px; background: rgba(255,255,255,0.1); border: 1px solid #62c566;">
                     Acceso Administrador 🔒
                 </button>
             </div>
@@ -40,6 +40,7 @@
         <p class="enlace-cambio">¿No tienes carné? <a href="registro.html">Regístrate aquí</a></p>
     </div>
 
-    <script type="module" src="script.js"></script>
+    <script type="module" src="firebase.config.js"></script>
+    <script type="module" src="auth.js"></script>
 </body>
 </html>
