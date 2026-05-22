@@ -21,6 +21,7 @@
                     <input type="text" id="nombre-evento" placeholder="Nombre del evento..." class="input-estilo" style="flex: 2;">
                     <input type="number" id="puntos-evento" placeholder="Pts" class="input-estilo" style="flex: 0.5; min-width: 60px;" value="10">
                 </div>
+                <input type="date" id="fecha-evento" class="input-estilo" style="width: 100%; margin-top: 8px;">
                 <button class="btn-principal" onclick="crearEvento()" style="margin-top: 10px;">Guardar Evento</button>
             </section>
 
@@ -158,6 +159,30 @@
         </div>
     </div>
 
+    <!-- MODAL EDITAR EVENTO -->
+    <div id="modal-editar-evento" class="modal-oculto">
+        <div class="contenido-modal" style="max-width: 380px;">
+            <h3 style="color: #62c566; margin-bottom: 15px;">✏️ Editar Evento</h3>
+
+            <label style="color: #c4c4c4; font-size: 0.85em;">Nombre del evento</label>
+            <input type="text" id="editar-nombre-evento" class="input-estilo" style="width: 100%; margin-bottom: 12px;">
+
+            <label style="color: #c4c4c4; font-size: 0.85em;">Puntos de recompensa</label>
+            <input type="number" id="editar-puntos-evento" class="input-estilo" style="width: 100%; margin-bottom: 12px;">
+
+            <label style="color: #c4c4c4; font-size: 0.85em;">Fecha del evento</label>
+            <input type="date" id="editar-fecha-evento" class="input-estilo" style="width: 100%; margin-bottom: 20px;">
+
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-secundario" onclick="cerrarModalEditarEvento()" style="flex: 1; border-color: #ff4d4d; color: #ff4d4d;">
+                    Cancelar
+                </button>
+                <button class="btn-puntos" onclick="guardarEdicionEvento()" style="flex: 1;">
+                    Guardar cambios
+                </button>
+            </div>
+        </div>
+    </div>
 
 </body>
 </html>

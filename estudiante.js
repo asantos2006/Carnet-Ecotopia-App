@@ -62,7 +62,10 @@ window.actualizarHistorialUI = function(historial) {
     historialInvertido.forEach(actividad => {
         html += `
             <div class="item-actividad" style="display: flex; justify-content: space-between; margin-bottom: 8px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px;">
-                <span>🌿 ${actividad.nombre}</span>
+                <div>
+                    <span>🌿 ${actividad.nombre}</span>
+                    ${actividad.fecha ? `<p style="font-size: 0.75em; color: rgba(255,255,255,0.4); margin-top: 3px;">📅 ${formatearFechaHistorial(actividad.fecha)}</p>` : ''}
+                </div>
                 <span style="color: var(--color-primary-dark); font-weight: bold;">+${actividad.puntos}</span>
             </div>
         `;
@@ -174,4 +177,10 @@ window.guardarObjetivos = async function() {
 
 window.cerrarModalObjetivos = function() {
     document.getElementById('modal-objetivos').style.display = 'none';
+}
+
+window.formatearFechaHistorial = function(fecha) {
+    if (!fecha) return "";
+    const d = fecha.toDate ? fecha.toDate() : new Date(fecha);
+    return d.toLocaleDateString('es-ES');
 }

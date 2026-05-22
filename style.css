@@ -555,6 +555,7 @@ select.input-estilo option {
     font-size: 1.1em;
     border-radius: 20px;
     cursor: pointer;
+    color: var(--color-primary-dark);
 }
 
 .tag-puntos {

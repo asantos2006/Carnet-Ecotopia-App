@@ -4,6 +4,7 @@ import { auth, db } from "./firebase.config.js";
 let escanerModalActivo = null;
 let eventoEscaneandoActual = null;
 let qrProcesando = false;
+let eventoEditandoActual = null;
 
 window.crearEvento = async function() {
     const nombreVal = document.getElementById('nombre-evento').value.trim();
@@ -16,11 +17,14 @@ window.crearEvento = async function() {
         await setDoc(nuevoEventoRef, {
             nombre: nombreVal,
             puntosRecompensa: puntosVal,
+            fechaEvento: document.getElementById('fecha-evento').value || "",
+            asistencia: 0,
             date: new Date()
         });
         mostrarToastNotificacion("✅ Evento creado con éxito.", "exito");
         document.getElementById('nombre-evento').value = "";
         document.getElementById('puntos-evento').value = "10";
+        document.getElementById('fecha-evento').value = "";
         cargarPanelAdminCompleto();
     } catch (e) { console.error(e); }
 }
@@ -84,20 +88,35 @@ window.cargarPanelAdminCompleto = async function() {
             html += `
                 <div class="fila-usuario">
                     <div style="width: 100%;">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; gap: 8px;">
-                            <strong style="color: var(--color-primary-dark); font-size: 0.95em; flex: 1; word-break: break-word;">
-                                ${nombreEvento}
-                            </strong>
-                            <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
-                                <button class="btn-icono-rojo" onclick="borrarEvento('${idEvento}', '${nombreEvento}')">
-                                    🗑️
-                                </button>
-                                <button class="btn-icono-verde" onclick="abrirCamaraModal('${idEvento}', '${nombreEvento}', ${puntosEvento})">
-                                    📷
-                                </button>
-                                <span class="tag-puntos">${puntosEvento} pts</span>
+                        
+                        <!-- FILA 1: Nombre, fecha y puntos -->
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                            <div style="flex: 1;">
+                                <strong style="color: var(--color-primary-dark); font-size: 0.95em; word-break: break-word;">
+                                    ${nombreEvento}
+                                </strong>
+                                <p style="color: #c4c4c4; font-size: 0.75em; margin-top: 3px;">
+                                    ${evento.fechaEvento ? `📅 ${formatearFecha(evento.fechaEvento)}` : '📅 Sin fecha'}
+                                </p>
                             </div>
+                            <span class="tag-puntos">${puntosEvento} Pts</span>
+                            <span class="tag-puntos"> ${evento.asistencia || 0} 👥 </span>
                         </div>
+
+                        <!-- FILA 2: Botones de acción -->
+                        <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                            <button class="btn-icono-verde" onclick="abrirModalEditarEvento('${idEvento}', '${nombreEvento}', ${puntosEvento}, '${evento.fechaEvento || ''}')" style="flex: 1; padding: 8px;">
+                                ✏️ Editar
+                            </button>
+                            <button class="btn-icono-verde" onclick="abrirCamaraModal('${idEvento}', '${nombreEvento}', ${puntosEvento})" style="flex: 1; padding: 8px;">
+                                📷 QR
+                            </button>
+                            <button class="btn-icono-rojo" onclick="borrarEvento('${idEvento}', '${nombreEvento}')" style="flex: 1; padding: 8px;">
+                                🗑️ Borrar
+                            </button>
+                        </div>
+
+                        <!-- FILA 3: Fichar manual -->
                         <div style="display: flex; gap: 5px; width: 100%;">
                             <select id="select-${idEvento}" class="input-estilo" style="padding: 6px; font-size: 0.8em; flex: 1; min-width: 0;">
                                 ${opcionesUsuarios}
@@ -106,6 +125,7 @@ window.cargarPanelAdminCompleto = async function() {
                                 Fichar
                             </button>
                         </div>
+
                     </div>
                 </div>
             `;
@@ -142,6 +162,20 @@ window.procesarFichaje = async function(idUsuario, nombreEvento, puntosASumar) {
                 fecha: new Date()
             })
         });
+
+        // Incrementar asistencia en el evento
+        const eventosSnapshot = await getDocs(collection(db, "eventos"));
+        const promesasAsistencia = [];
+        eventosSnapshot.forEach(eventoDoc => {
+            if (eventoDoc.data().nombre === nombreEvento) {
+                promesasAsistencia.push(
+                    updateDoc(doc(db, "eventos", eventoDoc.id), {
+                        asistencia: increment(1)
+                    })
+                );
+            }
+        });
+        await Promise.all(promesasAsistencia);
 
         return { exito: true, tipo: "ok", mensaje: `¡+${puntosASumar} pts añadidos correctamente!` };
 
@@ -207,6 +241,20 @@ window.procesarBorradoFichaje = async function(idUsuario, nombreEvento, historia
             puntosTotales: increment(-puntosARestar)
         });
 
+        // Decrementar asistencia en el evento
+        const eventosSnapshot = await getDocs(collection(db, "eventos"));
+        const promesasAsistencia = [];
+        eventosSnapshot.forEach(eventoDoc => {
+            if (eventoDoc.data().nombre === nombreEvento) {
+                promesasAsistencia.push(
+                    updateDoc(doc(db, "eventos", eventoDoc.id), {
+                        asistencia: increment(-1)
+                    })
+                );
+            }
+        });
+        await Promise.all(promesasAsistencia);
+
         return { exito: true, mensaje: `Evento "${nombreEvento}" borrado. -${puntosARestar} pts.` };
 
     } catch (error) {
@@ -225,6 +273,7 @@ window.borrarFichajeManual = async function(idUsuario, nombreEvento) {
         mostrarToastNotificacion(resultado.mensaje, "exito");
         abrirModalUsuario(idUsuario);
         mostrarUsuariosAdmin();
+        cargarPanelAdminCompleto();
     } else {
         mostrarToastNotificacion(resultado.mensaje, "error");
     }
@@ -392,6 +441,7 @@ window.cerrarModalCodigo = function() {
     document.getElementById('modal-codigo-admin').style.display = 'none';
     document.getElementById('input-nuevo-codigo').value = '';
 }
+
 window.exportarExcel = async function() {
     mostrarToastNotificacion("Generando Excel...", "aviso");
 
@@ -449,14 +499,21 @@ window.exportarExcel = async function() {
         const fechaTexto = fecha.toLocaleDateString('es-ES');
         const horaTexto = fecha.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
 
+        const filaEventos = ["", "", "", ""];
+        eventos.forEach(ev => {
+            filaEventos.push(`👥 ${ev.asistencia || 0} asistentes`);
+            filaEventos.push("");
+        });
+
         const datosHoja = [
             [`Informe Carné Ecotópico`],
             [`Fecha de exportación: ${fechaTexto} a las ${horaTexto}`],
             [`Total de ecotópicos: ${usuarios.length} | Total de eventos: ${eventos.length}`],
-            [], // fila vacía de separación
+            [],
             cabecera,
+            filaEventos,
             ...filas
-        ];
+        ];;
 
         // 5. Crear el libro Excel
         const libro = XLSX.utils.book_new();
@@ -478,5 +535,89 @@ window.exportarExcel = async function() {
     } catch (error) {
         console.error("Error al exportar Excel:", error);
         mostrarToastNotificacion("Error al generar el Excel.", "error");
+    }
+}
+
+window.formatearFecha = function(fechaString) {
+    if (!fechaString) return "Sin fecha";
+    const [anio, mes, dia] = fechaString.split('-');
+    return `${dia}/${mes}/${anio}`;
+}
+
+window.abrirModalEditarEvento = function(idEvento, nombreEvento, puntosEvento, fechaEvento) {
+    eventoEditandoActual = idEvento;
+    document.getElementById('editar-nombre-evento').value = nombreEvento;
+    document.getElementById('editar-puntos-evento').value = puntosEvento;
+    document.getElementById('editar-fecha-evento').value = fechaEvento;
+    document.getElementById('modal-editar-evento').style.display = 'flex';
+}
+
+window.cerrarModalEditarEvento = function() {
+    document.getElementById('modal-editar-evento').style.display = 'none';
+    eventoEditandoActual = null;
+}
+
+window.guardarEdicionEvento = async function() {
+    if (!eventoEditandoActual) return;
+
+    const nuevoNombre = document.getElementById('editar-nombre-evento').value.trim();
+    const nuevosPuntos = parseInt(document.getElementById('editar-puntos-evento').value);
+    const nuevaFecha = document.getElementById('editar-fecha-evento').value;
+
+    if (!nuevoNombre || isNaN(nuevosPuntos)) {
+        return mostrarToastNotificacion("El nombre y los puntos son obligatorios.", "aviso");
+    }
+
+    try {
+        // 1. Leer el evento actual para saber el nombre y puntos viejos
+        const eventoRef = doc(db, "eventos", eventoEditandoActual);
+        const eventoSnap = await getDoc(eventoRef);
+        if (!eventoSnap.exists()) return mostrarToastNotificacion("Evento no encontrado.", "error");
+
+        const nombreViejo = eventoSnap.data().nombre;
+        const puntosViejos = eventoSnap.data().puntosRecompensa;
+        const diferenciaPuntos = nuevosPuntos - puntosViejos;
+
+        // 2. Actualizar el evento en Firestore
+        await updateDoc(eventoRef, {
+            nombre: nuevoNombre,
+            puntosRecompensa: nuevosPuntos,
+            fechaEvento: nuevaFecha || ""
+        });
+
+        // 3. Recorrer todos los usuarios y actualizar los que tengan el evento
+        const usuariosSnapshot = await getDocs(collection(db, "usuarios"));
+        const promesas = [];
+
+        usuariosSnapshot.forEach(usuarioDoc => {
+            const historial = usuarioDoc.data().historial || [];
+            const tieneElEvento = historial.some(act => act.nombre === nombreViejo);
+
+            if (tieneElEvento) {
+                // Actualizar el nombre y puntos en el historial
+                const nuevoHistorial = historial.map(act => {
+                    if (act.nombre === nombreViejo) {
+                        return { ...act, nombre: nuevoNombre, puntos: nuevosPuntos };
+                    }
+                    return act;
+                });
+
+                promesas.push(updateDoc(doc(db, "usuarios", usuarioDoc.id), {
+                    historial: nuevoHistorial,
+                    puntosTotales: increment(diferenciaPuntos)
+                }));
+            }
+        });
+
+        await Promise.all(promesas);
+
+        mostrarToastNotificacion(`✅ Evento actualizado. ${promesas.length} estudiantes recalculados.`, "exito");
+        cerrarModalEditarEvento();
+        cargarPanelAdminCompleto();
+        mostrarUsuariosAdmin();
+
+    } catch (error) {
+        console.error("Error al editar evento:", error);
+        mostrarToastNotificacion("Error al guardar los cambios.", "error");
     }
 }
