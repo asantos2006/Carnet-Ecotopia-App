@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
     <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body class="fondo-hoja"> <!-- Usamos el fondo de la hoja que ya tienes -->
     <div class="contenedor-principal" >
@@ -39,6 +40,9 @@
                 <h3 style="color: white; font-size: 0.9em; margin-bottom: 10px;">3. Ecotópicos</h3>
                 <button class="btn-puntos" onclick="abrirModalCodigo()" style="margin-bottom: 12px; width: 100%;">
                     🔑 Código de Registro
+                </button>
+                <button class="btn-puntos" onclick="exportarExcel()" style="margin-bottom: 12px; width: 100%; background: transparent; border: 1px solid var(--color-primary-dark); color: var(--color-primary-dark);">
+                    📊 Exportar Excel
                 </button>
                 <div id="lista-usuarios" class="contenedor-lista">
                     <p style="color: rgba(255,255,255,0.6);">Cargando estudiantes...</p>

@@ -392,3 +392,91 @@ window.cerrarModalCodigo = function() {
     document.getElementById('modal-codigo-admin').style.display = 'none';
     document.getElementById('input-nuevo-codigo').value = '';
 }
+window.exportarExcel = async function() {
+    mostrarToastNotificacion("Generando Excel...", "aviso");
+
+    try {
+        // 1. Leer todos los eventos y usuarios de Firestore
+        const [snapshotEventos, snapshotUsuarios] = await Promise.all([
+            getDocs(collection(db, "eventos")),
+            getDocs(collection(db, "usuarios"))
+        ]);
+
+        const eventos = [];
+        snapshotEventos.forEach(d => eventos.push({ id: d.id, ...d.data() }));
+
+        const usuarios = [];
+        snapshotUsuarios.forEach(d => usuarios.push({ id: d.id, ...d.data() }));
+
+        // Ordenar usuarios por nombre
+        usuarios.sort((a, b) => (a.nombre || "").localeCompare(b.nombre || ""));
+
+        // 2. Construir cabeceras
+        const cabecera = ["Nombre", "Email", "Fecha Registro", "Puntos Totales"];
+        eventos.forEach(ev => {
+            cabecera.push(`${ev.nombre} - Objetivo`);
+            cabecera.push(`${ev.nombre} - Hecho`);
+        });
+
+        // 3. Construir filas
+        const filas = usuarios.map(usuario => {
+            const historialNombres = (usuario.historial || []).map(h => h.nombre);
+            const objetivosIds = usuario.objetivosId || [];
+
+            let fechaRegistro = "";
+            if (usuario.fechaRegistro) {
+                const fecha = usuario.fechaRegistro.toDate ? usuario.fechaRegistro.toDate() : new Date(usuario.fechaRegistro);
+                fechaRegistro = fecha.toLocaleDateString('es-ES');
+            }
+
+            const fila = [
+                usuario.nombre || "",
+                usuario.email || "",
+                fechaRegistro,
+                usuario.puntosTotales || 0
+            ];
+
+            eventos.forEach(ev => {
+                fila.push(objetivosIds.includes(ev.id) ? "Sí" : "No");
+                fila.push(historialNombres.includes(ev.nombre) ? "Sí" : "No");
+            });
+
+            return fila;
+        });
+
+        // 4. Montar la hoja con cabecera de info arriba
+        const fecha = new Date();
+        const fechaTexto = fecha.toLocaleDateString('es-ES');
+        const horaTexto = fecha.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+
+        const datosHoja = [
+            [`Informe Carné Ecotópico`],
+            [`Fecha de exportación: ${fechaTexto} a las ${horaTexto}`],
+            [`Total de ecotópicos: ${usuarios.length} | Total de eventos: ${eventos.length}`],
+            [], // fila vacía de separación
+            cabecera,
+            ...filas
+        ];
+
+        // 5. Crear el libro Excel
+        const libro = XLSX.utils.book_new();
+        const hoja = XLSX.utils.aoa_to_sheet(datosHoja);
+
+        // Anchos de columna automáticos
+        hoja['!cols'] = cabecera.map((_, i) => ({
+            wch: i === 0 ? 20 : i === 1 ? 25 : i === 2 ? 15 : 10
+        }));
+
+        XLSX.utils.book_append_sheet(libro, hoja, "Ecotópicos");
+
+        // 6. Descargar
+        const nombreArchivo = `ecotopia_informe_${fecha.toISOString().slice(0,10)}.xlsx`;
+        XLSX.writeFile(libro, nombreArchivo);
+
+        mostrarToastNotificacion("✅ Excel generado correctamente.", "exito");
+
+    } catch (error) {
+        console.error("Error al exportar Excel:", error);
+        mostrarToastNotificacion("Error al generar el Excel.", "error");
+    }
+}
