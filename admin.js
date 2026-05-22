@@ -1,5 +1,5 @@
 import { doc, getDoc, setDoc, updateDoc, deleteDoc, increment, collection, getDocs, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-import { db } from "./firebase.config.js";
+import { auth, db } from "./firebase.config.js";
 
 let escanerModalActivo = null;
 let eventoEscaneandoActual = null;
@@ -168,22 +168,15 @@ window.registrarAsistenciaManual = async function(idEvento, nombreEvento, puntos
 
 window.registrarAsistenciaQR = async function(idUsuarioEscaneado, evento) {
     const resultado = await procesarFichaje(idUsuarioEscaneado, evento.nombreEvento, evento.puntosEvento);
-    const toast = document.getElementById('toast-notificacion');
 
     if (resultado.exito) {
-        toast.style.backgroundColor = "#62c566";
-        toast.style.color = "#0d1a0e";
-        mostrarToastNotificacion(`✅ ${resultado.mensaje}`);
+        mostrarToastNotificacion(`✅ ${resultado.mensaje}`, "exito");
         cargarPanelAdminCompleto();
         mostrarUsuariosAdmin();
     } else if (resultado.tipo === "duplicado") {
-        toast.style.backgroundColor = "#ffcc00";
-        toast.style.color = "#000";
-        mostrarToastNotificacion(`⚠️ ${resultado.mensaje}`);
+        mostrarToastNotificacion(`⚠️ ${resultado.mensaje}`, "aviso");
     } else {
-        toast.style.backgroundColor = "#ff4d4d";
-        toast.style.color = "white";
-        mostrarToastNotificacion(`❌ ${resultado.mensaje}`);
+        mostrarToastNotificacion(`❌ ${resultado.mensaje}`, "error");
     }
 }
 
@@ -353,4 +346,49 @@ window.abrirModalUsuario = async function(idUsuario) {
 
 window.cerrarModalUsuario = function() {
     document.getElementById('modal-info-usuario').style.display = 'none';
+}
+
+window.abrirModalCodigo = async function() {
+    document.getElementById('modal-codigo-admin').style.display = 'flex';
+    document.getElementById('display-codigo-actual').innerText = '...';
+
+    try {
+        const configRef = doc(db, "config", "registro");
+        const configSnap = await getDoc(configRef);
+
+        if (configSnap.exists()) {
+            document.getElementById('display-codigo-actual').innerText = configSnap.data().codigo;
+        } else {
+            document.getElementById('display-codigo-actual').innerText = 'N/A';
+        }
+    } catch (error) {
+        console.error("Error al cargar código:", error);
+        mostrarToastNotificacion("Error al cargar el código.", "error");
+    }
+}
+
+window.cambiarCodigoRegistro = async function() {
+    const nuevoCodigo = document.getElementById('input-nuevo-codigo').value.trim();
+
+    if (nuevoCodigo.length !== 4 || !/^\d{4}$/.test(nuevoCodigo)) {
+        return mostrarToastNotificacion("El código debe ser exactamente 4 dígitos numéricos.", "aviso");
+    }
+
+    try {
+        const configRef = doc(db, "config", "registro");
+        await setDoc(configRef, { codigo: nuevoCodigo });
+
+        document.getElementById('display-codigo-actual').innerText = nuevoCodigo;
+        document.getElementById('input-nuevo-codigo').value = '';
+        mostrarToastNotificacion("✅ Código actualizado correctamente.", "exito");
+
+    } catch (error) {
+        console.error("Error al cambiar código:", error);
+        mostrarToastNotificacion("Error al guardar el nuevo código.", "error");
+    }
+}
+
+window.cerrarModalCodigo = function() {
+    document.getElementById('modal-codigo-admin').style.display = 'none';
+    document.getElementById('input-nuevo-codigo').value = '';
 }

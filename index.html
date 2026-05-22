@@ -8,9 +8,9 @@
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
 </head>
-<div id="toast-notificacion" class="toast-oculto"></div>
-<body>
 
+<body>
+    <div id="toast-notificacion" class="toast-oculto"></div>
     <div class="tarjeta">
         <img src="logo_ecotopia.png" alt="Logo Ecotopía" class="logo">
         
@@ -29,19 +29,39 @@
             <div class="grupo-botones">
                 <!-- 1. Le añadimos el onclick para que responda al ratón -->
                 <button type="button" class="btn-principal" onclick="iniciarSesion(event)">Entrar</button>
-                
-                <!-- 2. Arreglamos el de Admin (asegúrate de que también pase el event) -->
-                <button type="button" class="btn-secundario" onclick=" iniciarSesion(event)" style="margin-top: 10px; background: rgba(255,255,255,0.1); border: 1px solid #62c566;">
-                    Acceso Administrador 🔒
-                </button>
             </div>
         </form>
-
+        <p class="enlace-cambio">
+            <a href="#" onclick="abrirModalRecuperacion()">¿Olvidaste tu contraseña?</a>
+        </p>
         <!-- Un texto para volver al registro si se equivocaron de pantalla -->
         <p class="enlace-cambio">¿No tienes carné? <a href="registro.html">Regístrate aquí</a></p>
     </div>
 
     <script type="module" src="firebase.config.js"></script>
     <script type="module" src="auth.js"></script>
+
+    <div id="modal-recuperacion" class="modal-oculto">
+    <div class="contenido-modal" style="max-width: 340px;">
+        <h3 style="color: #62c566; margin-bottom: 10px;">🔑 Recuperar Contraseña</h3>
+        <p style="color: #c4c4c4; font-size: 0.85em; margin-bottom: 20px;">
+            Introduce tu correo y te enviaremos un enlace para restablecer tu contraseña.
+        </p>
+        <input 
+            type="email" 
+            id="email-recuperacion" 
+            placeholder="tu@email.com"
+            style="width: 100%; margin-bottom: 15px;"
+        >
+        <div style="display: flex; gap: 10px;">
+            <button class="btn-secundario" onclick="cerrarModalRecuperacion()" style="flex: 1; border-color: #ff4d4d; color: #ff4d4d;">
+                Cancelar
+            </button>
+            <button class="btn-puntos" onclick="recuperarContrasena()" style="flex: 1;">
+                Enviar correo
+            </button>
+        </div>
+    </div>
+</div>
 </body>
 </html>

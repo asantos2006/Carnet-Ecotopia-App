@@ -36,6 +36,9 @@
             <!-- SECCIÓN C: LISTA DE ESTUDIANTES -->
             <section class="seccion-admin">
                 <h3 style="color: white; font-size: 0.9em; margin-bottom: 10px;">3. Ecotópicos</h3>
+                <button class="btn-puntos" onclick="abrirModalCodigo()" style="margin-bottom: 12px; width: 100%;">
+                    🔑 Código de Registro
+                </button>
                 <div id="lista-usuarios" class="contenedor-lista">
                     <p style="color: rgba(255,255,255,0.6);">Cargando estudiantes...</p>
                 </div>
@@ -113,7 +116,42 @@
     <script type="module" src="auth.js"></script>
     <script type="module" src="admin.js"></script>
 
+    <!-- MODAL CÓDIGO DE REGISTRO -->
+    <div id="modal-codigo-admin" class="modal-oculto">
+        <div class="contenido-modal" style="max-width: 340px;">
+            <h3 style="color: #62c566; margin-bottom: 5px;">🔑 Código de Registro</h3>
+            <p style="color: #c4c4c4; font-size: 0.8em; margin-bottom: 20px;">
+                Comparte este código con los nuevos miembros.
+            </p>
 
+            <p style="color: #c4c4c4; font-size: 0.85em; margin-bottom: 8px;">Código actual:</p>
+            <div id="display-codigo-actual" style="
+                font-size: 3em;
+                font-weight: bold;
+                color: #62c566;
+                letter-spacing: 0.4em;
+                text-shadow: 0 0 15px rgba(98, 197, 102, 0.6);
+                margin-bottom: 25px;
+            ">----</div>
+
+            <input 
+                type="text" 
+                id="input-nuevo-codigo"
+                placeholder="Nuevo código (4 dígitos)"
+                maxlength="4"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                class="input-estilo"
+                style="text-align: center; font-size: 1.4em; padding: 12px; width: 100%; margin-bottom: 12px;"
+            >
+            <button class="btn-puntos" onclick="cambiarCodigoRegistro()" style="width: 100%; margin-bottom: 10px;">
+                Cambiar Código
+            </button>
+            <button class="btn-secundario" onclick="cerrarModalCodigo()" style="width: 100%; border-color: #ff4d4d; color: #ff4d4d;">
+                ❌ Cerrar
+            </button>
+        </div>
+    </div>
 
 
 </body>

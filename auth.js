@@ -1,4 +1,4 @@
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { auth, db, CORREO_ADMIN } from "./firebase.config.js";
 
@@ -82,6 +82,37 @@ window.mostrarToastNotificacion = function(mensaje, tipo = "exito") {
     }, 3000);
 }
 
+window.recuperarContrasena = async function() {
+    const email = document.getElementById('email-recuperacion').value.trim();
+
+    if (!email) {
+        return mostrarToastNotificacion("Introduce tu correo electrónico.", "aviso");
+    }
+
+    try {
+        await sendPasswordResetEmail(auth, email);
+        mostrarToastNotificacion("📧 Correo de recuperación enviado. Revisa tu bandeja.", "exito");
+        cerrarModalRecuperacion();
+    } catch (error) {
+        if (error.code === 'auth/user-not-found') {
+            mostrarToastNotificacion("No existe ninguna cuenta con ese correo.", "error");
+        } else if (error.code === 'auth/invalid-email') {
+            mostrarToastNotificacion("El formato del correo no es válido.", "error");
+        } else {
+            mostrarToastNotificacion("Error al enviar el correo. Inténtalo de nuevo.", "error");
+        }
+    }
+}
+
+window.abrirModalRecuperacion = function() {
+    document.getElementById('modal-recuperacion').style.display = 'flex';
+}
+
+window.cerrarModalRecuperacion = function() {
+    document.getElementById('modal-recuperacion').style.display = 'none';
+    document.getElementById('email-recuperacion').value = '';
+}
+
 onAuthStateChanged(auth, async (user) => {
     const rutaPagina = window.location.pathname.toLowerCase();
 
@@ -109,6 +140,31 @@ onAuthStateChanged(auth, async (user) => {
         const zonaProtegida = rutaPagina.includes("principal.html") || rutaPagina.includes("admin.html");
         if (zonaProtegida) {
             window.location.href = "index.html";
+        }
+    }
+});
+
+// Navegación con Enter en formularios
+document.addEventListener('keydown', function(e) {
+    if (e.key !== 'Enter') return;
+
+    const ruta = window.location.pathname.toLowerCase();
+
+    if (ruta.includes('index.html') || ruta === '/' || ruta === '' || ruta.endsWith('/')) {
+        // Si el modal de recuperación está abierto, disparar ese botón
+        const modalRecuperacion = document.getElementById('modal-recuperacion');
+        if (modalRecuperacion && modalRecuperacion.style.display === 'flex') {
+            recuperarContrasena();
+        } else {
+            iniciarSesion(e);
+        }
+    }
+
+    if (ruta.includes('registro.html')) {
+        // Solo si el modal de código está cerrado (ya tiene su propio listener)
+        const modalCodigo = document.getElementById('modal-codigo-registro');
+        if (modalCodigo && modalCodigo.style.display === 'none') {
+            document.getElementById('formulario-registro').requestSubmit();
         }
     }
 });
