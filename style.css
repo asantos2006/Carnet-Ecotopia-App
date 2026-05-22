@@ -42,6 +42,35 @@ body {
     border: 2px solid var(--color-primary); 
     box-shadow: 0 0 25px rgba(126, 217, 87, 0.4); 
 }
+/* Estilo base de contenedor-principal (escritorio) */
+.contenedor-principal {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    width: 100%;
+    padding: 40px 20px;
+}
+
+/* En móvil ocupa todo el ancho */
+@media (max-width: 768px) {
+    .contenedor-principal {
+        padding: 0;
+    }
+
+    .tarjeta {
+        width: 100%;
+        max-width: 100%;
+        border-radius: 0;
+        padding: 25px 15px;
+        border-left: none;
+        border-right: none;
+        min-height: 100vh;
+    }
+
+    body {
+        align-items: flex-start;
+    }
+}
 
 /* 4. EL LOGO Y LOS TÍTULOS */
 .logo {
