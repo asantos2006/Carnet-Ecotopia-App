@@ -1,146 +1,442 @@
 import { doc, getDoc, setDoc, updateDoc, deleteDoc, increment, collection, getDocs, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { auth, db } from "./firebase.config.js";
 
+// ==========================================
+// 1. VARIABLES GLOBALES DE ESTADO
+// ==========================================
 let escanerModalActivo = null;
 let eventoEscaneandoActual = null;
 let qrProcesando = false;
 let eventoEditandoActual = null;
+let datosEventoEditando = null;
+let ponentesEnMemoria = []; 
+let ponentesEdicionEnMemoria = [];
+
+// ==========================================
+// 2. MODAL: CREAR EVENTO
+// ==========================================
+window.agregarPonente = function() {
+    const input = document.getElementById('input-ponente');
+    const nombre = input.value.trim();
+    if (nombre) {
+        ponentesEnMemoria.push(nombre);
+        input.value = "";
+        renderizarPonentes();
+    }
+}
+
+window.quitarPonente = function(index) {
+    ponentesEnMemoria.splice(index, 1);
+    renderizarPonentes();
+}
+
+window.renderizarPonentes = function() {
+    const listaUI = document.getElementById('lista-ponentes');
+    listaUI.innerHTML = ponentesEnMemoria.map((ponente, index) => `
+        <li style="display: flex; justify-content: space-between; background: rgba(255,255,255,0.05); padding: 6px 10px; border-radius: 5px; font-size: 0.85em; border: 1px solid rgba(255,255,255,0.1);">
+            <span style="color: white;">🎙️ ${ponente}</span>
+            <span style="color: #ff4d4d; cursor: pointer; font-weight: bold;" onclick="quitarPonente(${index})">X</span>
+        </li>
+    `).join('');
+}
+
+window.abrirModalCrearEvento = async function() {
+    await cargarDropdownCategorias('categoria-evento');
+
+    document.getElementById('nombre-evento').value = "";
+    document.getElementById('desc-evento').value = "";
+    document.getElementById('puntos-evento').value = "10";
+    document.getElementById('fecha-evento').value = ""; // Nueva
+    document.getElementById('hora-evento').value = "";  // Nueva
+    document.getElementById('lugar-evento').value = "";
+    document.getElementById('input-ponente').value = "";
+    ponentesEnMemoria = []; 
+    renderizarPonentes(); 
+    document.getElementById('modal-crear-evento').style.display = 'flex';
+
+
+}
+
+window.cerrarModalCrearEvento = function() {
+    document.getElementById('modal-crear-evento').style.display = 'none';
+}
 
 window.crearEvento = async function() {
     const nombreVal = document.getElementById('nombre-evento').value.trim();
     const puntosVal = parseInt(document.getElementById('puntos-evento').value);
+    const descVal = document.getElementById('desc-evento').value.trim();
+    const lugarVal = document.getElementById('lugar-evento').value.trim();
+    const categoriaVal = document.getElementById('categoria-evento').value;
 
-    if (!nombreVal || isNaN(puntosVal)) return mostrarToastNotificacion("Rellena el nombre y los puntos del evento.", "aviso");
+    const fechaVal = document.getElementById('fecha-evento').value;
+    const horaVal = document.getElementById('hora-evento').value;
+
+    if (!nombreVal || isNaN(puntosVal)) return mostrarToastNotificacion("El nombre y los puntos son obligatorios.", "aviso");
 
     try {
         const nuevoEventoRef = doc(collection(db, "eventos"));
         await setDoc(nuevoEventoRef, {
             nombre: nombreVal,
+            descripcion: descVal,
+            lugar: lugarVal,
+            ponentes: ponentesEnMemoria,
             puntosRecompensa: puntosVal,
-            fechaEvento: document.getElementById('fecha-evento').value || "",
+            fechaEvento: fechaVal || "",
+            horaEvento: horaVal || "",  // <--- ESTA LÍNEA ES CRUCIAL
+            categoria: categoriaVal,
             asistencia: 0,
             date: new Date()
         });
+        
         mostrarToastNotificacion("✅ Evento creado con éxito.", "exito");
-        document.getElementById('nombre-evento').value = "";
-        document.getElementById('puntos-evento').value = "10";
-        document.getElementById('fecha-evento').value = "";
+        cerrarModalCrearEvento();
         cargarPanelAdminCompleto();
-    } catch (e) { console.error(e); }
+    } catch (e) { 
+        console.error("Error al crear el evento:", e); 
+        mostrarToastNotificacion("Error de conexión al crear el evento.", "error");
+    }
 }
 
-window.mostrarUsuariosAdmin = async function() {
-    const contenedor = document.getElementById('lista-usuarios');
+// ==========================================
+// 3. MODAL: EDITAR EVENTO
+// ==========================================
+window.agregarPonenteEdicion = function() {
+    const input = document.getElementById('editar-input-ponente');
+    const nombre = input.value.trim();
+    if (nombre) {
+        ponentesEdicionEnMemoria.push(nombre);
+        input.value = "";
+        renderizarPonentesEdicion();
+    }
+}
+
+window.quitarPonenteEdicion = function(index) {
+    ponentesEdicionEnMemoria.splice(index, 1);
+    renderizarPonentesEdicion();
+}
+
+window.renderizarPonentesEdicion = function() {
+    const listaUI = document.getElementById('editar-lista-ponentes');
+    listaUI.innerHTML = ponentesEdicionEnMemoria.map((ponente, index) => `
+        <li style="display: flex; justify-content: space-between; background: rgba(255,255,255,0.05); padding: 6px 10px; border-radius: 5px; font-size: 0.85em; border: 1px solid rgba(255,255,255,0.1);">
+            <span style="color: white;">🎙️ ${ponente}</span>
+            <span style="color: #ff4d4d; cursor: pointer; font-weight: bold;" onclick="quitarPonenteEdicion(${index})">X</span>
+        </li>
+    `).join('');
+}
+
+window.abrirModalEditarEvento = async function(idEvento) {
+    eventoEditandoActual = idEvento;
+    
+    try {
+        const eventoRef = doc(db, "eventos", idEvento);
+        const eventoSnap = await getDoc(eventoRef);
+        
+        if (eventoSnap.exists()) {
+            const data = eventoSnap.data();
+            
+            document.getElementById('editar-nombre-evento').value = data.nombre || "";
+            document.getElementById('editar-desc-evento').value = data.descripcion || "";
+            document.getElementById('editar-puntos-evento').value = data.puntosRecompensa || 10;
+            document.getElementById('editar-lugar-evento').value = data.lugar || "";
+            document.getElementById('editar-fecha-evento').value = data.fechaEvento || "";
+            document.getElementById('editar-hora-evento').value = data.horaEvento || "";
+            document.getElementById('modal-editar-evento').style.display = 'flex';
+            
+            // 2. Cargamos el dropdown pasando la categoría que ya tiene guardada (o vacío si no tiene)
+            await cargarDropdownCategorias('editar-categoria-evento', data.categoria || "");
+            
+            ponentesEdicionEnMemoria = data.ponentes ? [...data.ponentes] : [];
+            renderizarPonentesEdicion();
+        }
+    } catch(e) {
+        console.error("Error al cargar evento:", e);
+    }
+}
+
+window.cerrarModalEditarEvento = function() {
+    document.getElementById('modal-editar-evento').style.display = 'none';
+    eventoEditandoActual = null;
+}
+
+window.guardarEdicionEvento = async function() {
+    if (!eventoEditandoActual) return;
+
+    const nuevoNombre = document.getElementById('editar-nombre-evento').value.trim();
+    const nuevaDesc = document.getElementById('editar-desc-evento').value.trim();
+    const nuevosPuntos = parseInt(document.getElementById('editar-puntos-evento').value);
+    const nuevoLugar = document.getElementById('editar-lugar-evento').value.trim();
+    const nuevaCategoria = document.getElementById('editar-categoria-evento').value;
+    const nuevaFecha = document.getElementById('editar-fecha-evento').value;
+    const nuevaHora = document.getElementById('editar-hora-evento').value;
+
+    if (!nuevoNombre || isNaN(nuevosPuntos)) {
+        return mostrarToastNotificacion("El nombre y los puntos son obligatorios.", "aviso");
+    }
+
+    try {
+        const eventoRef = doc(db, "eventos", eventoEditandoActual);
+        
+        // Actualizamos incluyendo horaEvento explícitamente
+        await updateDoc(eventoRef, {
+            nombre: nuevoNombre,
+            descripcion: nuevaDesc,
+            lugar: nuevoLugar,
+            categoria: nuevaCategoria,
+            ponentes: ponentesEdicionEnMemoria,
+            puntosRecompensa: nuevosPuntos,
+            fechaEvento: nuevaFecha || "",
+            horaEvento: nuevaHora || ""
+        });
+
+        // ... resto de tu lógica de actualización de usuarios ...
+        mostrarToastNotificacion("✅ Evento actualizado.", "exito");
+        cerrarModalEditarEvento();
+        cargarPanelAdminCompleto();
+    } catch (error) {
+        console.error("Error al editar:", error);
+    }
+}
+
+// ==========================================
+// MÓDULO: GESTIÓN DE CATEGORÍAS
+// ==========================================
+
+window.abrirModalCategorias = async function() {
+    document.getElementById('modal-categorias-admin').style.display = 'flex';
+    document.getElementById('input-nueva-categoria').value = "";
+    await cargarVistaCategorias();
+}
+
+window.cerrarModalCategorias = function() {
+    document.getElementById('modal-categorias-admin').style.display = 'none';
+}
+
+window.cargarVistaCategorias = async function() {
+    const contenedor = document.getElementById('lista-categorias-render');
+    contenedor.innerHTML = "<p style='color:white;text-align:center;'>Cargando...</p>";
+
+    try {
+        // 1. Traemos la lista maestra de categorías
+        const catSnap = await getDoc(doc(db, "config", "categorias"));
+        let categorias = catSnap.exists() ? (catSnap.data().lista || []) : [];
+
+        // 2. Traemos todos los eventos para agruparlos
+        const eventosSnap = await getDocs(collection(db, "eventos"));
+        let eventos = [];
+        eventosSnap.forEach(d => eventos.push({ id: d.id, ...d.data() }));
+
+        let html = "";
+        if (categorias.length === 0) {
+            html = "<p style='color:#c4c4c4; text-align:center; font-size: 0.9em;'>Aún no hay categorías creadas.</p>";
+        } else {
+            // Ordenar alfabéticamente
+            categorias.sort().forEach(cat => {
+                const eventosDeCat = eventos.filter(e => e.categoria === cat);
+                
+                // Montamos la sub-lista de eventos
+                let eventosHtml = eventosDeCat.map(e => `<li style="color:#c4c4c4; font-size: 0.85em; margin-left: 10px; margin-bottom: 3px;">🌿 ${e.nombre}</li>`).join('');
+                if (eventosHtml === "") eventosHtml = `<li style="color:rgba(255,255,255,0.3); font-size: 0.8em; margin-left: 10px; font-style: italic;">Sin eventos asignados</li>`;
+
+                // Montamos el bloque de la categoría (Tabla visual)
+                html += `
+                <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <strong style="color: var(--color-primary-light); font-size: 1em;">🏷️ ${cat}</strong>
+                        <button class="btn-icono-rojo" onclick="borrarCategoria('${cat}')" style="padding: 4px 10px; font-size: 0.8em; background: rgba(255, 77, 77, 0.1);">🗑️ Borrar</button>
+                    </div>
+                    <ul style="list-style: none; padding: 0;">
+                        ${eventosHtml}
+                    </ul>
+                </div>`;
+            });
+        }
+        contenedor.innerHTML = html;
+    } catch (e) {
+        console.error("Error cargando categorías:", e);
+        contenedor.innerHTML = "<p style='color:red;'>Error al cargar.</p>";
+    }
+}
+
+window.crearCategoria = async function() {
+    const input = document.getElementById('input-nueva-categoria');
+    const nombreCat = input.value.trim();
+    
+    if (!nombreCat) return mostrarToastNotificacion("Escribe un nombre para la categoría", "aviso");
+
+    try {
+        const catRef = doc(db, "config", "categorias");
+        const catSnap = await getDoc(catRef);
+        let lista = catSnap.exists() ? (catSnap.data().lista || []) : [];
+
+        // Evitar duplicados
+        if (lista.map(c => c.toLowerCase()).includes(nombreCat.toLowerCase())) {
+            return mostrarToastNotificacion("Esa categoría ya existe.", "aviso");
+        }
+
+        lista.push(nombreCat);
+        await setDoc(catRef, { lista: lista }, { merge: true });
+
+        input.value = "";
+        mostrarToastNotificacion("✅ Categoría creada", "exito");
+        cargarVistaCategorias(); // Refresca la tabla del modal
+    } catch (e) {
+        console.error(e);
+        mostrarToastNotificacion("Error de conexión.", "error");
+    }
+}
+
+window.borrarCategoria = async function(nombreCat) {
+    if (!confirm(`¿Seguro que quieres borrar la categoría "${nombreCat}"?\n\nLos eventos no se borrarán, pero perderán esta etiqueta.`)) return;
+
+    try {
+        // 1. Borrar de la lista maestra
+        const catRef = doc(db, "config", "categorias");
+        const catSnap = await getDoc(catRef);
+        if (catSnap.exists()) {
+            const nuevaLista = catSnap.data().lista.filter(c => c !== nombreCat);
+            await updateDoc(catRef, { lista: nuevaLista });
+        }
+
+        // 2. Borrar la etiqueta de los eventos de forma silenciosa
+        const eventosSnap = await getDocs(collection(db, "eventos"));
+        const promesas = [];
+        eventosSnap.forEach(docEv => {
+            if (docEv.data().categoria === nombreCat) {
+                promesas.push(updateDoc(doc(db, "eventos", docEv.id), { categoria: "" }));
+            }
+        });
+        await Promise.all(promesas);
+
+        mostrarToastNotificacion(`🗑️ Categoría "${nombreCat}" eliminada.`, "exito");
+        cargarVistaCategorias(); // Refresca la tabla
+        cargarPanelAdminCompleto(); // Refresca los eventos de fondo
+    } catch (e) {
+        console.error("Error al borrar categoría:", e);
+        mostrarToastNotificacion("Hubo un error al borrar.", "error");
+    }
+}
+
+// Función auxiliar para cargar el menú desplegable (select) al crear/editar eventos
+window.cargarDropdownCategorias = async function(idSelect, valorActual = "") {
+    const select = document.getElementById(idSelect);
+    if (!select) return;
+
+    try {
+        const catSnap = await getDoc(doc(db, "config", "categorias"));
+        const categorias = catSnap.exists() ? (catSnap.data().lista || []) : [];
+        
+        // Creamos la opción por defecto
+        let html = `<option value="">-- Sin categoría --</option>`;
+        
+        // Añadimos cada categoría
+        categorias.sort().forEach(c => {
+            // Si la categoría coincide con la del evento, la marcamos como "selected"
+            const seleccionado = (c === valorActual) ? "selected" : "";
+            html += `<option value="${c}" ${seleccionado}>${c}</option>`;
+        });
+        
+        select.innerHTML = html;
+    } catch (e) {
+        console.error("Error al cargar categorías en el dropdown:", e);
+    }
+}
+
+// ==========================================
+// 4. NUEVO DISPARADOR DIRECTO DE ASISTENCIA
+// ==========================================
+window.abrirModalAsistencia = async function(idEvento) {
+    if (!idEvento) return;
+    
+    try {
+        // Hacemos un fetch rápido de datos para saber el nombre y los puntos del evento
+        const eventoRef = doc(db, "eventos", idEvento);
+        const eventoSnap = await getDoc(eventoRef);
+        
+        if (eventoSnap.exists()) {
+            const data = eventoSnap.data();
+            datosEventoEditando = {
+                id: idEvento,
+                nombre: data.nombre,
+                puntos: data.puntosRecompensa
+            };
+            
+            // Abrimos la ventana directamente
+            document.getElementById('modal-asistencia-evento').style.display = 'flex';
+            document.getElementById('subtitulo-asistencia').innerText = datosEventoEditando.nombre;
+            
+            await cargarListaAsistencia();
+        } else {
+            mostrarToastNotificacion("El evento ya no existe.", "error");
+        }
+    } catch (e) {
+        console.error("Error al abrir asistencia:", e);
+        mostrarToastNotificacion("Fallo al leer datos del evento.", "error");
+    }
+}
+
+window.cerrarModalAsistencia = function() {
+    document.getElementById('modal-asistencia-evento').style.display = 'none';
+    datosEventoEditando = null; // Vaciamos estado de asistencia
+    
+    // Al volver, refrescamos el panel de fondo para actualizar contadores
+    cargarPanelAdminCompleto(); 
+    mostrarUsuariosAdmin();
+}
+
+window.cargarListaAsistencia = async function() {
+    const contenedor = document.getElementById('lista-asistencia-usuarios');
+    contenedor.innerHTML = "<p style='color: white; text-align: center;'>Cargando estudiantes...</p>";
+
     try {
         const querySnapshot = await getDocs(collection(db, "usuarios"));
-        let html = "";
+        let usuarios = [];
+        querySnapshot.forEach(doc => usuarios.push({ id: doc.id, ...doc.data() }));
 
-        querySnapshot.forEach((usuarioDoc) => {
-            const datos = usuarioDoc.data();
-            const nombreUsuario = datos.nombre || "Estudiante";
-            const puntosTotales = datos.puntosTotales || 0;
+        usuarios.sort((a, b) => (a.nombre || "").localeCompare(b.nombre || ""));
+
+        let html = "";
+        usuarios.forEach(user => {
+            const historial = user.historial || [];
+            const tieneAsistencia = historial.some(act => act.nombre === datosEventoEditando.nombre);
 
             html += `
-                <div class="fila-usuario" style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="color: white; font-size: 0.9em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;">
-                        <strong>${nombreUsuario}</strong>
+                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px; margin-bottom: 5px; border: 1px solid rgba(255,255,255,0.1);">
+                    <span style="color: white; font-size: 0.9em; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        ${user.nombre}
                     </span>
-                    <div style="display: flex; gap: 8px; align-items: center;">
-                        <span class="btn-puntos" style="cursor: default; pointer-events: none; font-size: 0.8em; padding: 5px 12px;">
-                            ${puntosTotales} pts
-                        </span>
-                        <button class="btn-puntos" onclick="abrirModalUsuario('${usuarioDoc.id}')" style="background: transparent; border: 1px solid var(--color-primary-dark); padding: 4px 8px; font-size: 1em;">
-                            ℹ️
-                        </button>
-                    </div>
+                    ${tieneAsistencia 
+                        ? `<button class="btn-icono-rojo" onclick="quitarAsistenciaRapida('${user.id}')" style="padding: 4px 10px; font-size: 0.85em; background: rgba(255, 77, 77, 0.1);">❌ Quitar</button>`
+                        : `<button class="btn-icono-verde" onclick="ponerAsistenciaRapida('${user.id}')" style="padding: 4px 10px; font-size: 0.85em; background: rgba(98, 197, 102, 0.1);">✅ Añadir</button>`
+                    }
                 </div>
             `;
         });
 
         contenedor.innerHTML = html;
     } catch (e) {
-        contenedor.innerHTML = "<p style='color: red;'>Error al cargar usuarios.</p>";
-        console.error("Error al mostrar usuarios:", e);
+        console.error("Error al cargar asistencia:", e);
+        contenedor.innerHTML = "<p style='color: #ff4d4d; text-align: center;'>Error al cargar estudiantes.</p>";
     }
 }
 
-window.cargarPanelAdminCompleto = async function() {
-    const contenedorEventos = document.getElementById('lista-eventos-admin');
-    if (!contenedorEventos) return;
-
-    try {
-        const snapshotUsuarios = await getDocs(collection(db, "usuarios"));
-        let opcionesUsuarios = `<option value="">Selecciona un estudiante...</option>`;
-        snapshotUsuarios.forEach(u => {
-            const data = u.data();
-            opcionesUsuarios += `<option value="${u.id}">${data.nombre}</option>`;
-        });
-
-        const snapshotEventos = await getDocs(collection(db, "eventos"));
-        let html = "";
-
-        snapshotEventos.forEach((docEvento) => {
-            const evento = docEvento.data();
-            const idEvento = docEvento.id;
-            const nombreEvento = evento.nombre || "Evento sin nombre";
-            const puntosEvento = evento.puntosRecompensa || 0;
-
-            html += `
-                <div class="fila-usuario">
-                    <div style="width: 100%;">
-                        
-                        <!-- FILA 1: Nombre, fecha y puntos -->
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-                            <div style="flex: 1;">
-                                <strong style="color: var(--color-primary-dark); font-size: 0.95em; word-break: break-word;">
-                                    ${nombreEvento}
-                                </strong>
-                                <p style="color: #c4c4c4; font-size: 0.75em; margin-top: 3px;">
-                                    ${evento.fechaEvento ? `📅 ${formatearFecha(evento.fechaEvento)}` : '📅 Sin fecha'}
-                                </p>
-                            </div>
-                            <span class="tag-puntos">${puntosEvento} Pts</span>
-                            <span class="tag-puntos"> ${evento.asistencia || 0} 👥 </span>
-                        </div>
-
-                        <!-- FILA 2: Botones de acción -->
-                        <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-                            <button class="btn-icono-verde" onclick="abrirModalEditarEvento('${idEvento}', '${nombreEvento}', ${puntosEvento}, '${evento.fechaEvento || ''}')" style="flex: 1; padding: 8px;">
-                                ✏️ Editar
-                            </button>
-                            <button class="btn-icono-verde" onclick="abrirCamaraModal('${idEvento}', '${nombreEvento}', ${puntosEvento})" style="flex: 1; padding: 8px;">
-                                📷 QR
-                            </button>
-                            <button class="btn-icono-rojo" onclick="borrarEvento('${idEvento}', '${nombreEvento}')" style="flex: 1; padding: 8px;">
-                                🗑️ Borrar
-                            </button>
-                        </div>
-
-                        <!-- FILA 3: Fichar manual -->
-                        <div style="display: flex; gap: 5px; width: 100%;">
-                            <select id="select-${idEvento}" class="input-estilo" style="padding: 6px; font-size: 0.8em; flex: 1; min-width: 0;">
-                                ${opcionesUsuarios}
-                            </select>
-                            <button class="btn-puntos" onclick="registrarAsistenciaManual('${idEvento}', '${nombreEvento}', ${puntosEvento})" style="padding: 6px 12px; white-space: nowrap;">
-                                Fichar
-                            </button>
-                        </div>
-
-                    </div>
-                </div>
-            `;
-        });
-
-        contenedorEventos.innerHTML = html;
-    } catch (e) {
-        console.error("Error al cargar panel:", e);
-    }
+window.ponerAsistenciaRapida = async function(idUsuario) {
+    const res = await procesarFichaje(idUsuario, datosEventoEditando.nombre, datosEventoEditando.puntos);
+    if (res.exito) cargarListaAsistencia();
+    else mostrarToastNotificacion(res.mensaje, "error");
 }
 
+window.quitarAsistenciaRapida = async function(idUsuario) {
+    const res = await procesarBorradoFichaje(idUsuario, datosEventoEditando.nombre);
+    if (res.exito) cargarListaAsistencia();
+    else mostrarToastNotificacion(res.mensaje, "error");
+}
+
+// ==========================================
+// 5. MOTOR BASE: FICHAJES Y BORRADOS
+// ==========================================
 window.procesarFichaje = async function(idUsuario, nombreEvento, puntosASumar) {
-    if (!idUsuario) {
-        return { exito: false, tipo: "vacio", mensaje: "No se ha seleccionado ningún estudiante." };
-    }
+    if (!idUsuario) return { exito: false, tipo: "vacio", mensaje: "No se ha seleccionado ningún estudiante." };
 
     try {
         const userRef = doc(db, "usuarios", idUsuario);
@@ -156,23 +452,14 @@ window.procesarFichaje = async function(idUsuario, nombreEvento, puntosASumar) {
 
         await updateDoc(userRef, {
             puntosTotales: increment(puntosASumar),
-            historial: arrayUnion({
-                nombre: nombreEvento,
-                puntos: puntosASumar,
-                fecha: new Date()
-            })
+            historial: arrayUnion({ nombre: nombreEvento, puntos: puntosASumar, fecha: new Date() })
         });
 
-        // Incrementar asistencia en el evento
         const eventosSnapshot = await getDocs(collection(db, "eventos"));
         const promesasAsistencia = [];
         eventosSnapshot.forEach(eventoDoc => {
             if (eventoDoc.data().nombre === nombreEvento) {
-                promesasAsistencia.push(
-                    updateDoc(doc(db, "eventos", eventoDoc.id), {
-                        asistencia: increment(1)
-                    })
-                );
+                promesasAsistencia.push(updateDoc(doc(db, "eventos", eventoDoc.id), { asistencia: increment(1) }));
             }
         });
         await Promise.all(promesasAsistencia);
@@ -185,40 +472,11 @@ window.procesarFichaje = async function(idUsuario, nombreEvento, puntosASumar) {
     }
 }
 
-window.registrarAsistenciaManual = async function(idEvento, nombreEvento, puntosASumar) {
-    const idUsuario = document.getElementById(`select-${idEvento}`).value;
-    const resultado = await procesarFichaje(idUsuario, nombreEvento, puntosASumar);
-
-    if (resultado.exito) {
-        mostrarToastNotificacion(resultado.mensaje, "exito");
-        cargarPanelAdminCompleto();
-        mostrarUsuariosAdmin();
-    } else if (resultado.tipo === "duplicado") {
-        mostrarToastNotificacion(`El estudiante ya tiene registrado "${nombreEvento}".`, "aviso");
-    } else {
-        mostrarToastNotificacion(resultado.mensaje, "error");
-    }
-}
-
-window.registrarAsistenciaQR = async function(idUsuarioEscaneado, evento) {
-    const resultado = await procesarFichaje(idUsuarioEscaneado, evento.nombreEvento, evento.puntosEvento);
-
-    if (resultado.exito) {
-        mostrarToastNotificacion(`✅ ${resultado.mensaje}`, "exito");
-        cargarPanelAdminCompleto();
-        mostrarUsuariosAdmin();
-    } else if (resultado.tipo === "duplicado") {
-        mostrarToastNotificacion(`⚠️ ${resultado.mensaje}`, "aviso");
-    } else {
-        mostrarToastNotificacion(`❌ ${resultado.mensaje}`, "error");
-    }
-}
-
 window.procesarBorradoFichaje = async function(idUsuario, nombreEvento, historialPrevio = null) {
     try {
         const userRef = doc(db, "usuarios", idUsuario);
-
         let historialActual;
+        
         if (historialPrevio !== null) {
             historialActual = historialPrevio;
         } else {
@@ -228,9 +486,7 @@ window.procesarBorradoFichaje = async function(idUsuario, nombreEvento, historia
         }
 
         const tieneElEvento = historialActual.some(act => act.nombre === nombreEvento);
-        if (!tieneElEvento) {
-            return { exito: false, mensaje: "El usuario no tiene este evento en su historial" };
-        }
+        if (!tieneElEvento) return { exito: false, mensaje: "El usuario no tiene este evento en su historial" };
 
         const eventoData = historialActual.find(act => act.nombre === nombreEvento);
         const puntosARestar = eventoData.puntos;
@@ -241,16 +497,11 @@ window.procesarBorradoFichaje = async function(idUsuario, nombreEvento, historia
             puntosTotales: increment(-puntosARestar)
         });
 
-        // Decrementar asistencia en el evento
         const eventosSnapshot = await getDocs(collection(db, "eventos"));
         const promesasAsistencia = [];
         eventosSnapshot.forEach(eventoDoc => {
             if (eventoDoc.data().nombre === nombreEvento) {
-                promesasAsistencia.push(
-                    updateDoc(doc(db, "eventos", eventoDoc.id), {
-                        asistencia: increment(-1)
-                    })
-                );
+                promesasAsistencia.push(updateDoc(doc(db, "eventos", eventoDoc.id), { asistencia: increment(-1) }));
             }
         });
         await Promise.all(promesasAsistencia);
@@ -259,33 +510,104 @@ window.procesarBorradoFichaje = async function(idUsuario, nombreEvento, historia
 
     } catch (error) {
         console.error("Error en el motor de borrado:", error);
-        return { exito: false, mensaje: "Error de conexión con la base de datos." };
+        return { exito: false, mensaje: "Error de conexión." };
     }
 }
 
-window.borrarFichajeManual = async function(idUsuario, nombreEvento) {
-    const confirmacion = confirm(`¿Seguro que quieres quitar el evento "${nombreEvento}" de este estudiante?\n\nSe le restarán los puntos automáticamente.`);
-    if (!confirmacion) return;
+// ==========================================
+// 6. RENDERIZADO DEL PANEL PRINCIPAL
+// ==========================================
+window.cargarPanelAdminCompleto = async function() {
+    const contenedorEventos = document.getElementById('lista-eventos-admin');
+    if (!contenedorEventos) return;
 
-    const resultado = await procesarBorradoFichaje(idUsuario, nombreEvento);
+    try {
+        const snapshotEventos = await getDocs(collection(db, "eventos"));
+        let html = "";
 
-    if (resultado.exito) {
-        mostrarToastNotificacion(resultado.mensaje, "exito");
-        abrirModalUsuario(idUsuario);
-        mostrarUsuariosAdmin();
-        cargarPanelAdminCompleto();
-    } else {
-        mostrarToastNotificacion(resultado.mensaje, "error");
+        snapshotEventos.forEach((docEvento) => {
+            const evento = docEvento.data();
+            const idEvento = docEvento.id;
+            
+            html += `
+                <div class="fila-usuario">
+                    <div style="width: 100%;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                            <div style="flex: 1;">
+                                <strong style="color: var(--color-primary-dark); font-size: 1.15em; word-break: break-word;">
+                                    ${evento.nombre || "Sin nombre"}
+                                    ${evento.categoria ? `<span class="tag-puntos" style="background: rgba(98, 197, 102, 0.2); color: var(--color-primary-light); margin-bottom: 5px; display: inline-block;">🏷️ ${evento.categoria}</span>` : ''}
+                                </strong>
+                                <p style="color: #c4c4c4; font-size: 0.75em; margin-top: 3px;">
+                                    ${evento.fechaEvento ? `📅 ${formatearFecha(evento.fechaEvento)}` : '📅 Sin fecha'}
+                                </p>
+                            </div>
+                            <span class="tag-puntos" style="font-size: 0.75em;">${evento.puntosRecompensa || 0} Pts</span>
+                            <span class="tag-puntos" style="font-size: 0.75em;">${evento.asistencia || 0} 👥</span>
+                        </div>
+
+                        <div style="display: flex; gap: 6px; margin-bottom: 6px;">
+                            <button class="btn-icono-verde" onclick="abrirModalEditarEvento('${idEvento}')" style="flex: 1; padding: 5px; font-size: 0.85em;">✏️ Editar</button>
+                            <button class="btn-icono-verde" onclick="abrirCamaraModal('${idEvento}')" style="flex: 1; padding: 5px; font-size: 0.85em;">📷 QR</button>
+                            <button class="btn-icono-rojo" onclick="borrarEvento('${idEvento}')" style="flex: 1; padding: 5px; font-size: 0.85em;">🗑️ Borrar</button>
+                        </div>
+
+                        <button class="btn-puntos" onclick="abrirModalAsistencia('${idEvento}')" style="width: 100%; padding: 6px; font-size: 0.85em; background: transparent; border: 1px solid var(--color-primary-light); color: var(--color-primary-light); margin-bottom: 4px;">
+                            👥 Asistencia Manual
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+
+        contenedorEventos.innerHTML = html;
+    } catch (e) {
+        console.error("Error al cargar panel:", e);
     }
 }
 
-window.borrarEvento = async function(idEvento, nombreEvento) {
-    const confirmacion = confirm(`¿Estás seguro de que quieres eliminar el evento "${nombreEvento}"?\n\n⚠️ IMPORTANTE: Esta acción también eliminará el evento del historial de TODOS los estudiantes que hayan participado y les restará los puntos.`);
+window.mostrarUsuariosAdmin = async function() {
+    const contenedor = document.getElementById('lista-usuarios');
+    try {
+        const querySnapshot = await getDocs(collection(db, "usuarios"));
+        let html = "";
 
-    if (confirmacion) {
-        try {
-            await deleteDoc(doc(db, "eventos", idEvento));
+        querySnapshot.forEach((usuarioDoc) => {
+            const datos = usuarioDoc.data();
+            html += `
+                <div class="fila-usuario" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: white; font-size: 0.9em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;">
+                        <strong>${datos.nombre || "Estudiante"}</strong>
+                    </span>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <span class="btn-puntos" style="cursor: default; pointer-events: none; font-size: 0.8em; padding: 5px 12px;">
+                            ${datos.puntosTotales || 0} pts
+                        </span>
+                        <button class="btn-puntos" onclick="abrirModalUsuario('${usuarioDoc.id}')" style="background: transparent; border: 1px solid var(--color-primary-dark); padding: 4px 8px; font-size: 1em;">
+                            ℹ️
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+        contenedor.innerHTML = html;
+    } catch (e) {
+        console.error("Error al mostrar usuarios:", e);
+    }
+}
 
+// ==========================================
+// 7. ACCIONES EXTRAS Y UTILIDADES
+// ==========================================
+window.borrarEvento = async function(idEvento) {
+    try {
+        const eventoRef = doc(db, "eventos", idEvento);
+        const eventoSnap = await getDoc(eventoRef);
+        if (!eventoSnap.exists()) return mostrarToastNotificacion("El evento ya fue borrado.", "aviso");
+        
+        const nombreEvento = eventoSnap.data().nombre;
+        if (confirm(`¿Estás seguro de eliminar el evento "${nombreEvento}"?\n\nSe restarán los puntos a los estudiantes.`)) {
+            await deleteDoc(eventoRef);
             const usuariosSnapshot = await getDocs(collection(db, "usuarios"));
             const promesasDeBorrado = [];
 
@@ -297,38 +619,73 @@ window.borrarEvento = async function(idEvento, nombreEvento) {
             });
 
             await Promise.all(promesasDeBorrado);
-
-            alert("✅ Evento borrado por completo. Se han actualizado los historiales de los estudiantes.");
+            alert("✅ Evento borrado. Historiales actualizados.");
             cargarPanelAdminCompleto();
             mostrarUsuariosAdmin();
-
-        } catch (error) {
-            console.error("Error al borrar evento en cascada:", error);
-            alert("❌ Hubo un problema al borrar el evento.");
         }
+    } catch (error) {
+        console.error("Error al borrar evento:", error);
     }
 }
 
-window.abrirCamaraModal = function(idEvento, nombreEvento, puntosEvento) {
-    eventoEscaneandoActual = { idEvento, nombreEvento, puntosEvento };
-    document.getElementById('titulo-modal-escaner').innerText = `Escaneando para:\n${nombreEvento}`;
-    document.getElementById('modal-escaner').style.display = 'flex';
+window.borrarFichajeManual = async function(idUsuario, nombreEvento) {
+    if (!confirm(`¿Seguro que quieres quitar el evento "${nombreEvento}" de este estudiante?`)) return;
 
-    escanerModalActivo = new Html5Qrcode("reader");
-    escanerModalActivo.start(
-        { facingMode: "environment" },
-        { fps: 5, qrbox: { width: 250, height: 250 } },
-        (decodedText) => {
-            if (qrProcesando) return;
-            qrProcesando = true;
-            registrarAsistenciaQR(decodedText, eventoEscaneandoActual);
-            setTimeout(() => { qrProcesando = false; }, 2500);
-        }
-    ).catch(err => {
-        console.error("Error de cámara:", err);
-        mostrarToastNotificacion("No se pudo encender la cámara.", "error");
-        cerrarCamaraModal();
-    });
+    const resultado = await procesarBorradoFichaje(idUsuario, nombreEvento);
+    if (resultado.exito) {
+        mostrarToastNotificacion(resultado.mensaje, "exito");
+        abrirModalUsuario(idUsuario);
+        mostrarUsuariosAdmin();
+        cargarPanelAdminCompleto();
+    } else {
+        mostrarToastNotificacion(resultado.mensaje, "error");
+    }
+}
+
+window.abrirCamaraModal = async function(idEvento) {
+    try {
+        const eventoRef = doc(db, "eventos", idEvento);
+        const eventoSnap = await getDoc(eventoRef);
+        
+        if (!eventoSnap.exists()) return mostrarToastNotificacion("El evento ya no existe.", "error");
+        
+        const data = eventoSnap.data();
+        eventoEscaneandoActual = { idEvento: idEvento, nombreEvento: data.nombre, puntosEvento: data.puntosRecompensa };
+        
+        document.getElementById('titulo-modal-escaner').innerText = `Escaneando:\n${data.nombre}`;
+        document.getElementById('modal-escaner').style.display = 'flex';
+
+        escanerModalActivo = new Html5Qrcode("reader");
+        escanerModalActivo.start(
+            { facingMode: "environment" },
+            { fps: 5, qrbox: { width: 250, height: 250 } },
+            (decodedText) => {
+                if (qrProcesando) return;
+                qrProcesando = true;
+                registrarAsistenciaQR(decodedText, eventoEscaneandoActual);
+                setTimeout(() => { qrProcesando = false; }, 2500);
+            }
+        ).catch(err => {
+            console.error("Error de cámara:", err);
+            mostrarToastNotificacion("No se pudo encender la cámara.", "error");
+            cerrarCamaraModal();
+        });
+    } catch (e) {
+        console.error("Error al abrir cámara:", e);
+    }
+}
+
+window.registrarAsistenciaQR = async function(idUsuarioEscaneado, evento) {
+    const resultado = await procesarFichaje(idUsuarioEscaneado, evento.nombreEvento, evento.puntosEvento);
+    if (resultado.exito) {
+        mostrarToastNotificacion(`✅ ${resultado.mensaje}`, "exito");
+        cargarPanelAdminCompleto();
+        mostrarUsuariosAdmin();
+    } else if (resultado.tipo === "duplicado") {
+        mostrarToastNotificacion(`⚠️ ${resultado.mensaje}`, "aviso");
+    } else {
+        mostrarToastNotificacion(`❌ ${resultado.mensaje}`, "error");
+    }
 }
 
 window.cerrarCamaraModal = function() {
@@ -349,7 +706,6 @@ window.abrirModalUsuario = async function(idUsuario) {
 
         if (docSnap.exists()) {
             const datos = docSnap.data();
-
             document.getElementById('info-nombre').innerText = datos.nombre || "Estudiante";
             document.getElementById('info-email').innerText = datos.email || "Sin correo asociado";
 
@@ -365,18 +721,15 @@ window.abrirModalUsuario = async function(idUsuario) {
             let html = "";
 
             if (historial.length === 0) {
-                html = `<tr><td colspan="2" style="text-align: center; padding: 15px; color: rgba(255,255,255,0.4); font-style: italic;">Aún no ha participado en actividades</td></tr>`;
+                html = `<tr><td colspan="2" style="text-align: center; padding: 15px; color: rgba(255,255,255,0.4); font-style: italic;">Aún no ha participado</td></tr>`;
             } else {
-                const historialInvertido = [...historial].reverse();
-                historialInvertido.forEach(act => {
+                [...historial].reverse().forEach(act => {
                     html += `
                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
                             <td style="padding: 8px 0; color: #c4c4c4;">🌿 ${act.nombre}</td>
                             <td style="text-align: right; padding: 8px 0; color: var(--color-primary-light); font-weight: bold; display: flex; justify-content: flex-end; align-items: center; gap: 10px;">
                                 +${act.puntos}
-                                <button onclick="borrarFichajeManual('${idUsuario}', '${act.nombre}')" style="background: transparent; border: none; color: #ff4d4d; cursor: pointer; font-size: 1.1em;" title="Borrar este fichaje">
-                                    🗑️
-                                </button>
+                                <button onclick="borrarFichajeManual('${idUsuario}', '${act.nombre}')" style="background: transparent; border: none; color: #ff4d4d; cursor: pointer; font-size: 1.1em;">🗑️</button>
                             </td>
                         </tr>
                     `;
@@ -388,8 +741,7 @@ window.abrirModalUsuario = async function(idUsuario) {
             document.getElementById('modal-info-usuario').style.display = 'flex';
         }
     } catch (error) {
-        console.error("Error al cargar info del usuario:", error);
-        mostrarToastNotificacion("Error al cargar la ficha del estudiante.", "error");
+        console.error("Error al cargar ficha:", error);
     }
 }
 
@@ -402,38 +754,26 @@ window.abrirModalCodigo = async function() {
     document.getElementById('display-codigo-actual').innerText = '...';
 
     try {
-        const configRef = doc(db, "config", "registro");
-        const configSnap = await getDoc(configRef);
-
-        if (configSnap.exists()) {
-            document.getElementById('display-codigo-actual').innerText = configSnap.data().codigo;
-        } else {
-            document.getElementById('display-codigo-actual').innerText = 'N/A';
-        }
+        const configSnap = await getDoc(doc(db, "config", "registro"));
+        document.getElementById('display-codigo-actual').innerText = configSnap.exists() ? configSnap.data().codigo : 'N/A';
     } catch (error) {
         console.error("Error al cargar código:", error);
-        mostrarToastNotificacion("Error al cargar el código.", "error");
     }
 }
 
 window.cambiarCodigoRegistro = async function() {
     const nuevoCodigo = document.getElementById('input-nuevo-codigo').value.trim();
-
     if (nuevoCodigo.length !== 4 || !/^\d{4}$/.test(nuevoCodigo)) {
-        return mostrarToastNotificacion("El código debe ser exactamente 4 dígitos numéricos.", "aviso");
+        return mostrarToastNotificacion("Debe ser de 4 dígitos numéricos.", "aviso");
     }
 
     try {
-        const configRef = doc(db, "config", "registro");
-        await setDoc(configRef, { codigo: nuevoCodigo });
-
+        await setDoc(doc(db, "config", "registro"), { codigo: nuevoCodigo });
         document.getElementById('display-codigo-actual').innerText = nuevoCodigo;
         document.getElementById('input-nuevo-codigo').value = '';
-        mostrarToastNotificacion("✅ Código actualizado correctamente.", "exito");
-
+        mostrarToastNotificacion("✅ Código actualizado.", "exito");
     } catch (error) {
         console.error("Error al cambiar código:", error);
-        mostrarToastNotificacion("Error al guardar el nuevo código.", "error");
     }
 }
 
@@ -446,7 +786,6 @@ window.exportarExcel = async function() {
     mostrarToastNotificacion("Generando Excel...", "aviso");
 
     try {
-        // 1. Leer todos los eventos y usuarios de Firestore
         const [snapshotEventos, snapshotUsuarios] = await Promise.all([
             getDocs(collection(db, "eventos")),
             getDocs(collection(db, "usuarios"))
@@ -454,170 +793,68 @@ window.exportarExcel = async function() {
 
         const eventos = [];
         snapshotEventos.forEach(d => eventos.push({ id: d.id, ...d.data() }));
-
         const usuarios = [];
         snapshotUsuarios.forEach(d => usuarios.push({ id: d.id, ...d.data() }));
 
-        // Ordenar usuarios por nombre
         usuarios.sort((a, b) => (a.nombre || "").localeCompare(b.nombre || ""));
 
-        // 2. Construir cabeceras
         const cabecera = ["Nombre", "Email", "Fecha Registro", "Puntos Totales"];
         eventos.forEach(ev => {
             cabecera.push(`${ev.nombre} - Objetivo`);
             cabecera.push(`${ev.nombre} - Hecho`);
         });
 
-        // 3. Construir filas
         const filas = usuarios.map(usuario => {
             const historialNombres = (usuario.historial || []).map(h => h.nombre);
             const objetivosIds = usuario.objetivosId || [];
-
             let fechaRegistro = "";
             if (usuario.fechaRegistro) {
                 const fecha = usuario.fechaRegistro.toDate ? usuario.fechaRegistro.toDate() : new Date(usuario.fechaRegistro);
                 fechaRegistro = fecha.toLocaleDateString('es-ES');
             }
 
-            const fila = [
-                usuario.nombre || "",
-                usuario.email || "",
-                fechaRegistro,
-                usuario.puntosTotales || 0
-            ];
-
+            const fila = [usuario.nombre || "", usuario.email || "", fechaRegistro, usuario.puntosTotales || 0];
             eventos.forEach(ev => {
                 fila.push(objetivosIds.includes(ev.id) ? "Sí" : "No");
                 fila.push(historialNombres.includes(ev.nombre) ? "Sí" : "No");
             });
-
             return fila;
         });
 
-        // 4. Montar la hoja con cabecera de info arriba
         const fecha = new Date();
-        const fechaTexto = fecha.toLocaleDateString('es-ES');
-        const horaTexto = fecha.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-
         const filaEventos = ["", "", "", ""];
-        eventos.forEach(ev => {
-            filaEventos.push(`👥 ${ev.asistencia || 0} asistentes`);
-            filaEventos.push("");
-        });
+        eventos.forEach(ev => { filaEventos.push(`👥 ${ev.asistencia || 0} asistentes`); filaEventos.push(""); });
 
         const datosHoja = [
             [`Informe Carné Ecotópico`],
-            [`Fecha de exportación: ${fechaTexto} a las ${horaTexto}`],
+            [`Fecha: ${fecha.toLocaleDateString('es-ES')} a las ${fecha.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`],
             [`Total de ecotópicos: ${usuarios.length} | Total de eventos: ${eventos.length}`],
             [],
             cabecera,
             filaEventos,
             ...filas
-        ];;
+        ];
 
-        // 5. Crear el libro Excel
         const libro = XLSX.utils.book_new();
         const hoja = XLSX.utils.aoa_to_sheet(datosHoja);
-
-        // Anchos de columna automáticos
-        hoja['!cols'] = cabecera.map((_, i) => ({
-            wch: i === 0 ? 20 : i === 1 ? 25 : i === 2 ? 15 : 10
-        }));
-
+        hoja['!cols'] = cabecera.map((_, i) => ({ wch: i === 0 ? 20 : i === 1 ? 25 : i === 2 ? 15 : 10 }));
         XLSX.utils.book_append_sheet(libro, hoja, "Ecotópicos");
-
-        // 6. Descargar
-        const nombreArchivo = `ecotopia_informe_${fecha.toISOString().slice(0,10)}.xlsx`;
-        XLSX.writeFile(libro, nombreArchivo);
-
-        mostrarToastNotificacion("✅ Excel generado correctamente.", "exito");
-
+        XLSX.writeFile(libro, `ecotopia_informe_${fecha.toISOString().slice(0,10)}.xlsx`);
+        
+        mostrarToastNotificacion("✅ Excel generado.", "exito");
     } catch (error) {
-        console.error("Error al exportar Excel:", error);
-        mostrarToastNotificacion("Error al generar el Excel.", "error");
+        console.error("Error al exportar:", error);
+        mostrarToastNotificacion("Error al exportar.", "error");
     }
 }
 
 window.formatearFecha = function(fechaString) {
     if (!fechaString) return "Sin fecha";
+    if (fechaString.includes('T')) {
+        const [fecha, hora] = fechaString.split('T');
+        const [anio, mes, dia] = fecha.split('-');
+        return `${dia}/${mes}/${anio} a las ${hora}`;
+    }
     const [anio, mes, dia] = fechaString.split('-');
     return `${dia}/${mes}/${anio}`;
-}
-
-window.abrirModalEditarEvento = function(idEvento, nombreEvento, puntosEvento, fechaEvento) {
-    eventoEditandoActual = idEvento;
-    document.getElementById('editar-nombre-evento').value = nombreEvento;
-    document.getElementById('editar-puntos-evento').value = puntosEvento;
-    document.getElementById('editar-fecha-evento').value = fechaEvento;
-    document.getElementById('modal-editar-evento').style.display = 'flex';
-}
-
-window.cerrarModalEditarEvento = function() {
-    document.getElementById('modal-editar-evento').style.display = 'none';
-    eventoEditandoActual = null;
-}
-
-window.guardarEdicionEvento = async function() {
-    if (!eventoEditandoActual) return;
-
-    const nuevoNombre = document.getElementById('editar-nombre-evento').value.trim();
-    const nuevosPuntos = parseInt(document.getElementById('editar-puntos-evento').value);
-    const nuevaFecha = document.getElementById('editar-fecha-evento').value;
-
-    if (!nuevoNombre || isNaN(nuevosPuntos)) {
-        return mostrarToastNotificacion("El nombre y los puntos son obligatorios.", "aviso");
-    }
-
-    try {
-        // 1. Leer el evento actual para saber el nombre y puntos viejos
-        const eventoRef = doc(db, "eventos", eventoEditandoActual);
-        const eventoSnap = await getDoc(eventoRef);
-        if (!eventoSnap.exists()) return mostrarToastNotificacion("Evento no encontrado.", "error");
-
-        const nombreViejo = eventoSnap.data().nombre;
-        const puntosViejos = eventoSnap.data().puntosRecompensa;
-        const diferenciaPuntos = nuevosPuntos - puntosViejos;
-
-        // 2. Actualizar el evento en Firestore
-        await updateDoc(eventoRef, {
-            nombre: nuevoNombre,
-            puntosRecompensa: nuevosPuntos,
-            fechaEvento: nuevaFecha || ""
-        });
-
-        // 3. Recorrer todos los usuarios y actualizar los que tengan el evento
-        const usuariosSnapshot = await getDocs(collection(db, "usuarios"));
-        const promesas = [];
-
-        usuariosSnapshot.forEach(usuarioDoc => {
-            const historial = usuarioDoc.data().historial || [];
-            const tieneElEvento = historial.some(act => act.nombre === nombreViejo);
-
-            if (tieneElEvento) {
-                // Actualizar el nombre y puntos en el historial
-                const nuevoHistorial = historial.map(act => {
-                    if (act.nombre === nombreViejo) {
-                        return { ...act, nombre: nuevoNombre, puntos: nuevosPuntos };
-                    }
-                    return act;
-                });
-
-                promesas.push(updateDoc(doc(db, "usuarios", usuarioDoc.id), {
-                    historial: nuevoHistorial,
-                    puntosTotales: increment(diferenciaPuntos)
-                }));
-            }
-        });
-
-        await Promise.all(promesas);
-
-        mostrarToastNotificacion(`✅ Evento actualizado. ${promesas.length} estudiantes recalculados.`, "exito");
-        cerrarModalEditarEvento();
-        cargarPanelAdminCompleto();
-        mostrarUsuariosAdmin();
-
-    } catch (error) {
-        console.error("Error al editar evento:", error);
-        mostrarToastNotificacion("Error al guardar los cambios.", "error");
-    }
 }

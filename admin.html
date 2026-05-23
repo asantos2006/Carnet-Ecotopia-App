@@ -9,36 +9,31 @@
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
-<body class="fondo-hoja"> <!-- Usamos el fondo de la hoja que ya tienes -->
+<body class="fondo-hoja">
     <div class="contenedor-principal" >
-        <div class="tarjeta login-box"> <!-- Reutilizamos 'tarjeta' y 'login-box' para el cristal esmerilado -->
+        <div class="tarjeta login-box">
             <h2 class="titulo-verde">Panel de Control Ecotopía</h2>
 
-            <!-- SECCIÓN A: CREAR EVENTOS -->
-            <section class="seccion-admin" style="margin-bottom: 20px;">
-                <h3 style="color: white; font-size: 0.9em; margin-bottom: 10px;">1. Crear Nuevo Evento</h3>
-                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <input type="text" id="nombre-evento" placeholder="Nombre del evento..." class="input-estilo" style="flex: 2;">
-                    <input type="number" id="puntos-evento" placeholder="Pts" class="input-estilo" style="flex: 0.5; min-width: 60px;" value="10">
-                </div>
-                <input type="date" id="fecha-evento" class="input-estilo" style="width: 100%; margin-top: 8px;">
-                <button class="btn-principal" onclick="crearEvento()" style="margin-top: 10px;">Guardar Evento</button>
-            </section>
-
-            <hr style="border: 0.5px solid rgba(255,255,255,0.2); margin: 20px 0;">
-
-            <!-- SECCIÓN B: GESTIÓN DE ACTIVIDADES -->
             <section class="seccion-admin">
-                <h3 style="color: white; font-size: 0.9em; margin-bottom: 10px;">2. Registrar Asistencia por Evento</h3>
+                <h3 style="color: white; font-size: 0.9em; margin-bottom: 10px;">1. Actividades</h3>
+                
+                <button class="btn-puntos" onclick="abrirModalCrearEvento()" style="margin-bottom: 12px; width: 100%;">
+                    ➕ Nueva Actividad
+                </button>
+                
+                <button class="btn-puntos" onclick="abrirModalCategorias()" style="margin-bottom: 12px; width: 100%;">
+                    🏷️ Gestionar Categorías
+                </button>
+
                 <div id="lista-eventos-admin" class="contenedor-lista">
-                    <p style="color: rgba(255,255,255,0.6);">Cargando eventos...</p> </div>
+                    <p style="color: rgba(255,255,255,0.6);">Cargando eventos...</p> 
+                </div>
             </section>
 
             <hr style="border: 0.5px solid rgba(255,255,255,0.2); margin: 20px 0;">
 
-            <!-- SECCIÓN C: LISTA DE ESTUDIANTES -->
             <section class="seccion-admin">
-                <h3 style="color: white; font-size: 0.9em; margin-bottom: 10px;">3. Ecotópicos</h3>
+                <h3 style="color: white; font-size: 0.9em; margin-bottom: 10px;">2. Ecotópicos</h3>
                 <button class="btn-puntos" onclick="abrirModalCodigo()" style="margin-bottom: 12px; width: 100%;">
                     🔑 Código de Registro
                 </button>
@@ -56,33 +51,23 @@
         </div>
     </div>
 
-
-<!--Ventana Escaner QR-->
-
     <div id="modal-escaner" class="modal-oculto">
         <div class="contenido-modal">
             <h3 id="titulo-modal-escaner" style="color: #62c566; margin-bottom: 10px;">Escaneando...</h3>
             <p style="color: white; font-size: 0.8em; margin-bottom: 15px;">Apunta hacia el código QR.</p>
-            
             <div id="reader" style="width: 100%; max-width: 300px; margin: auto; border-radius: 10px; overflow: hidden;"></div>
-            
             <button class="btn-secundario mt-20" onclick="cerrarCamaraModal()" style="border-color: #ff4d4d; color: #ff4d4d;">
                 ❌ Cerrar Escáner
             </button>
         </div>
     </div>
 
-    <!--Ventana Información del ecotopico-->
-
     <div id="modal-info-usuario" class="modal-oculto">
         <div class="contenido-modal" style="max-width: 400px; text-align: left;">
-            
-            <!-- Cabecera con datos del usuario -->
             <h3 id="info-nombre" style="color: #62c566; margin-bottom: 5px; text-align: center; text-transform: uppercase;">Nombre</h3>
             <p id="info-email" style="color: #c4c4c4; font-size: 0.9em; text-align: center; margin-bottom: 5px;">email@test.com</p>
             <p id="info-fecha" style="color: #c4c4c4; font-size: 0.8em; text-align: center; margin-bottom: 20px;">Registrado el: --</p>
 
-            <!-- Tabla del Historial -->
             <div style="max-height: 220px; overflow-y: auto; margin-bottom: 15px; padding-right: 5px;">
                 <table style="width: 100%; border-collapse: collapse; color: white; font-size: 0.9em;">
                     <thead>
@@ -91,9 +76,7 @@
                             <th style="text-align: right; padding: 5px 0;">Puntos</th>
                         </tr>
                     </thead>
-                    <tbody id="info-tabla-historial">
-                        <!-- Aquí inyectaremos las filas desde JS -->
-                    </tbody>
+                    <tbody id="info-tabla-historial"></tbody>
                     <tfoot>
                         <tr style="border-top: 1px solid #62c566; font-weight: bold;">
                             <td style="text-align: left; padding: 10px 0;">TOTAL ACUMULADO</td>
@@ -103,7 +86,6 @@
                 </table>
             </div>
 
-            <!-- Botón de Cerrar -->
             <div style="text-align: center;">
                 <button class="btn-secundario" onclick="cerrarModalUsuario()" style="border-color: #ff4d4d; color: #ff4d4d; width: 100%;">
                     ❌ Cerrar Ficha
@@ -112,77 +94,146 @@
         </div>
     </div>
 
-    <!--Notificación qr detectado-->
-
-    <div id="toast-notificacion" class="toast-oculto">
-        ✅ ¡Fichaje guardado!
-    </div>
+    <div id="toast-notificacion" class="toast-oculto">✅ ¡Fichaje guardado!</div>
 
     <script type="module" src="firebase.config.js"></script>
     <script type="module" src="auth.js"></script>
     <script type="module" src="admin.js"></script>
 
-    <!-- MODAL CÓDIGO DE REGISTRO -->
     <div id="modal-codigo-admin" class="modal-oculto">
         <div class="contenido-modal" style="max-width: 340px;">
             <h3 style="color: #62c566; margin-bottom: 5px;">🔑 Código de Registro</h3>
-            <p style="color: #c4c4c4; font-size: 0.8em; margin-bottom: 20px;">
-                Comparte este código con los nuevos miembros.
-            </p>
-
+            <p style="color: #c4c4c4; font-size: 0.8em; margin-bottom: 20px;">Comparte este código con los nuevos miembros.</p>
             <p style="color: #c4c4c4; font-size: 0.85em; margin-bottom: 8px;">Código actual:</p>
-            <div id="display-codigo-actual" style="
-                font-size: 3em;
-                font-weight: bold;
-                color: #62c566;
-                letter-spacing: 0.4em;
-                text-shadow: 0 0 15px rgba(98, 197, 102, 0.6);
-                margin-bottom: 25px;
-            ">----</div>
-
-            <input 
-                type="text" 
-                id="input-nuevo-codigo"
-                placeholder="Nuevo código (4 dígitos)"
-                maxlength="4"
-                inputmode="numeric"
-                pattern="[0-9]*"
-                class="input-estilo"
-                style="text-align: center; font-size: 1.4em; padding: 12px; width: 100%; margin-bottom: 12px;"
-            >
-            <button class="btn-puntos" onclick="cambiarCodigoRegistro()" style="width: 100%; margin-bottom: 10px;">
-                Cambiar Código
-            </button>
-            <button class="btn-secundario" onclick="cerrarModalCodigo()" style="width: 100%; border-color: #ff4d4d; color: #ff4d4d;">
-                ❌ Cerrar
-            </button>
+            <div id="display-codigo-actual" style="font-size: 3em; font-weight: bold; color: #62c566; letter-spacing: 0.4em; text-shadow: 0 0 15px rgba(98, 197, 102, 0.6); margin-bottom: 25px;">----</div>
+            <input type="text" id="input-nuevo-codigo" placeholder="Nuevo código (4 dígitos)" maxlength="4" inputmode="numeric" pattern="[0-9]*" class="input-estilo" style="text-align: center; font-size: 1.4em; padding: 12px; width: 100%; margin-bottom: 12px;">
+            <button class="btn-puntos" onclick="cambiarCodigoRegistro()" style="width: 100%; margin-bottom: 10px;">Cambiar Código</button>
+            <button class="btn-secundario" onclick="cerrarModalCodigo()" style="width: 100%; border-color: #ff4d4d; color: #ff4d4d;">❌ Cerrar</button>
         </div>
     </div>
 
-    <!-- MODAL EDITAR EVENTO -->
     <div id="modal-editar-evento" class="modal-oculto">
-        <div class="contenido-modal" style="max-width: 380px;">
-            <h3 style="color: #62c566; margin-bottom: 15px;">✏️ Editar Evento</h3>
+        <div class="contenido-modal" style="max-width: 420px;">
+            <h3 style="color: #62c566; margin-bottom: 15px; text-align: center;">✏️ Editar Evento</h3>
+            <div style="max-height: 60vh; overflow-y: auto; padding-right: 10px; margin-bottom: 15px; text-align: left;">
+                <label style="color: #c4c4c4; font-size: 0.85em; display: block; margin-bottom: 5px;">Nombre del evento *</label>
+                <input type="text" id="editar-nombre-evento" class="input-estilo" style="width: 100%; margin-bottom: 12px;">
 
-            <label style="color: #c4c4c4; font-size: 0.85em;">Nombre del evento</label>
-            <input type="text" id="editar-nombre-evento" class="input-estilo" style="width: 100%; margin-bottom: 12px;">
+                <label style="color: #c4c4c4; font-size: 0.85em; display: block; margin-bottom: 5px;">Descripción</label>
+                <textarea id="editar-desc-evento" class="input-estilo" style="width: 100%; margin-bottom: 12px; resize: vertical; min-height: 60px; font-family: inherit;"></textarea>
+                
+                <label style="color: #c4c4c4; font-size: 0.85em; display: block; margin-bottom: 5px;">Categoría</label>
+                <select id="editar-categoria-evento" class="input-estilo" style="width: 100%; margin-bottom: 12px; padding: 12px;">
+                    <option value="">-- Sin categoría --</option>
+                </select>
 
-            <label style="color: #c4c4c4; font-size: 0.85em;">Puntos de recompensa</label>
-            <input type="number" id="editar-puntos-evento" class="input-estilo" style="width: 100%; margin-bottom: 12px;">
+                <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                    <div style="flex: 1;">
+                        <label style="color: #c4c4c4; font-size: 0.85em; display: block; margin-bottom: 5px;">Puntos *</label>
+                        <input type="number" id="editar-puntos-evento" class="input-estilo" style="width: 100%;">
+                    </div>
+                    <div style="flex: 2;">
+                        <label style="color: #c4c4c4; font-size: 0.85em; display: block; margin-bottom: 5px;">Fecha y Hora</label>
+                        <div style="display: flex; gap: 5px;">
+                            <input type="date" id="editar-fecha-evento" class="input-estilo" style="width: 55%; padding: 12px 8px;" max="2099-12-31">
+                            <input type="time" id="editar-hora-evento" class="input-estilo" style="width: 45%; padding: 12px 8px;" step="60">
+                        </div>
+                    </div>
+                </div>
 
-            <label style="color: #c4c4c4; font-size: 0.85em;">Fecha del evento</label>
-            <input type="date" id="editar-fecha-evento" class="input-estilo" style="width: 100%; margin-bottom: 20px;">
+                <label style="color: #c4c4c4; font-size: 0.85em; display: block; margin-bottom: 5px;">Lugar</label>
+                <input type="text" id="editar-lugar-evento" class="input-estilo" style="width: 100%; margin-bottom: 12px;">
 
+                <label style="color: #c4c4c4; font-size: 0.85em; display: block; margin-bottom: 5px;">Ponentes</label>
+                <div style="display: flex; gap: 5px; margin-bottom: 8px; align-items: stretch;">
+                    <input type="text" id="editar-input-ponente" placeholder="Nombre..." class="input-estilo" style="flex: 1; margin: 0;">
+                    <button type="button" class="btn-puntos" onclick="agregarPonenteEdicion()" style="border-radius: 5px; margin: 0; padding: 0 20px; display: flex; align-items: center; justify-content: center;">Añadir</button>
+                </div>
+                <ul id="editar-lista-ponentes" style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px;"></ul>
+            </div>
             <div style="display: flex; gap: 10px;">
-                <button class="btn-secundario" onclick="cerrarModalEditarEvento()" style="flex: 1; border-color: #ff4d4d; color: #ff4d4d;">
-                    Cancelar
-                </button>
-                <button class="btn-puntos" onclick="guardarEdicionEvento()" style="flex: 1;">
-                    Guardar cambios
-                </button>
+                <button class="btn-secundario" onclick="cerrarModalEditarEvento()" style="flex: 1; border-color: #ff4d4d; color: #ff4d4d;">Cancelar</button>
+                <button class="btn-puntos" onclick="guardarEdicionEvento()" style="flex: 1;">Guardar Cambios</button>
             </div>
         </div>
     </div>
 
+    <div id="modal-asistencia-evento" class="modal-oculto">
+        <div class="contenido-modal" style="max-width: 420px;">
+            <h3 style="color: #62c566; margin-bottom: 5px; text-align: center;">👥 Asistencia Manual</h3>
+            <p id="subtitulo-asistencia" style="color: #c4c4c4; font-size: 0.85em; text-align: center; margin-bottom: 15px;">Evento...</p>
+            <div id="lista-asistencia-usuarios" style="max-height: 55vh; overflow-y: auto; padding-right: 5px; margin-bottom: 15px; text-align: left;">
+                <p style="color: white; text-align: center;">Cargando estudiantes...</p>
+            </div>
+            <button class="btn-secundario" onclick="cerrarModalAsistencia()" style="width: 100%; border-color: #ff4d4d; color: #ff4d4d;">
+                ⬅️ Volver al Panel
+            </button>
+        </div>
+    </div>
+
+    <div id="modal-crear-evento" class="modal-oculto">
+        <div class="contenido-modal" style="max-width: 420px;">
+            <h3 style="color: #62c566; margin-bottom: 15px; text-align: center;">➕ Nueva Actividad</h3>
+            <div style="max-height: 60vh; overflow-y: auto; padding-right: 10px; margin-bottom: 15px; text-align: left;">
+                <label style="color: #c4c4c4; font-size: 0.85em; display: block; margin-bottom: 5px;">Nombre del evento *</label>
+                <input type="text" id="nombre-evento" placeholder="Ej. Asamblea Anual..." class="input-estilo" style="width: 100%; margin-bottom: 12px;">
+
+                <label style="color: #c4c4c4; font-size: 0.85em; display: block; margin-bottom: 5px;">Categoría</label>
+                <select id="categoria-evento" class="input-estilo" style="width: 100%; margin-bottom: 12px; padding: 12px; appearance: none;">
+                    <option value="">-- Sin categoría --</option>
+                </select>
+
+                <label style="color: #c4c4c4; font-size: 0.85em; display: block; margin-bottom: 5px;">Descripción</label>
+                <textarea id="desc-evento" placeholder="¿De qué trata el evento?" class="input-estilo" style="width: 100%; margin-bottom: 12px; resize: vertical; min-height: 60px; font-family: inherit;"></textarea>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                    <div style="flex: 1;">
+                        <label style="color: #c4c4c4; font-size: 0.85em; display: block; margin-bottom: 5px;">Puntos *</label>
+                        <input type="number" id="puntos-evento" class="input-estilo" style="width: 100%;" value="10">
+                    </div>
+                    <div style="flex: 2;">
+                        <label style="color: #c4c4c4; font-size: 0.85em; display: block; margin-bottom: 5px;">Fecha y Hora</label>
+                        <div style="display: flex; gap: 5px;">
+                            <input type="date" id="fecha-evento" class="input-estilo" style="width: 55%; padding: 12px 8px;" max="2099-12-31">
+                            <input type="time" id="hora-evento" class="input-estilo" style="width: 45%; padding: 12px 8px;" step="60">
+                        </div>
+                    </div>
+                </div>
+
+                <label style="color: #c4c4c4; font-size: 0.85em; display: block; margin-bottom: 5px;">Lugar</label>
+                <input type="text" id="lugar-evento" placeholder="Ej. Aula 004, Edificio Ampliación" class="input-estilo" style="width: 100%; margin-bottom: 12px;">
+
+                <label style="color: #c4c4c4; font-size: 0.85em; display: block; margin-bottom: 5px;">Ponentes</label>
+                <div style="display: flex; gap: 5px; margin-bottom: 8px; align-items: stretch;">
+                    <input type="text" id="input-ponente" placeholder="Nombre del ponente..." class="input-estilo" style="flex: 1; margin: 0;">
+                    <button type="button" class="btn-puntos" onclick="agregarPonente()" style="border-radius: 5px; margin: 0; padding: 0 20px; display: flex; align-items: center; justify-content: center;">Añadir</button>
+                </div>
+                <ul id="lista-ponentes" style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px;"></ul>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-secundario" onclick="cerrarModalCrearEvento()" style="flex: 1; border-color: #ff4d4d; color: #ff4d4d;">Cancelar</button>
+                <button class="btn-puntos" onclick="crearEvento()" style="flex: 1;">Guardar Evento</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-categorias-admin" class="modal-oculto">
+        <div class="contenido-modal" style="max-width: 420px;">
+            <h3 style="color: #62c566; margin-bottom: 15px; text-align: center;">🏷️ Categorías</h3>
+            
+            <div style="display: flex; gap: 5px; margin-bottom: 15px; align-items: stretch;">
+                <input type="text" id="input-nueva-categoria" placeholder="Nueva categoría..." class="input-estilo" style="flex: 1; margin: 0;">
+                <button type="button" class="btn-puntos" onclick="crearCategoria()" style="border-radius: 5px; margin: 0; padding: 0 15px; display: flex; align-items: center;">Añadir</button>
+            </div>
+
+            <div id="lista-categorias-render" style="max-height: 50vh; overflow-y: auto; padding-right: 5px; margin-bottom: 15px; text-align: left;">
+                <p style="color: white; text-align: center;">Cargando categorías...</p>
+            </div>
+
+            <button class="btn-secundario" onclick="cerrarModalCategorias()" style="width: 100%; border-color: #ff4d4d; color: #ff4d4d;">
+                ⬅️ Volver al Panel
+            </button>
+        </div>
+    </div>
 </body>
 </html>
