@@ -515,10 +515,7 @@ window.procesarBorradoFichaje = async function(idUsuario, nombreEvento, historia
 }
 
 // ==========================================
-// 6. RENDERIZADO DEL PANEL PRINCIPAL
-// ==========================================
-// ==========================================
-// 6. RENDERIZADO DEL PANEL PRINCIPAL
+// 6. RENDERIZADO DEL PANEL PRINCIPAL (Con Desplegables y Notificación)
 // ==========================================
 
 // Memoria caché para recordar qué tarjetas están abiertas al recargar datos
@@ -551,7 +548,6 @@ window.cargarPanelAdminCompleto = async function() {
             html += `
                 <div class="fila-usuario" style="flex-direction: column; padding-bottom: 5px;">
                     <div style="width: 100%;">
-                        <!-- CABECERA DEL EVENTO (Siempre visible) -->
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
                             <div style="flex: 1; min-width: 0;">
                                 <strong style="color: var(--color-primary-dark); font-size: 1em; word-break: break-word; display: block; line-height: 1.3;">
@@ -570,14 +566,12 @@ window.cargarPanelAdminCompleto = async function() {
                             </div>
                         </div>
 
-                        <!-- FLECHA DESPLEGABLE -->
                         <div style="display: flex; justify-content: flex-start; margin-top: 0px;">
                             <button id="flecha-${idEvento}" onclick="toggleControlesEvento('${idEvento}')" style="background: transparent; border: none; color: ${colorFlecha}; font-size: 0.8em; cursor: pointer; padding: 4px 8px; transform: ${transformFlecha}; transition: transform 0.3s ease, color 0.3s ease;">
                                 ▼
                             </button>
                         </div>
 
-                        <!-- CONTROLES OCULTOS -->
                         <div id="controles-${idEvento}" style="display: ${displayControles}; flex-direction: column; margin-top: 5px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 10px;">
                             <div style="display: flex; gap: 6px; margin-bottom: 6px;">
                                 <button class="btn-icono-verde" onclick="abrirModalEditarEvento('${idEvento}')" style="flex: 1; padding: 5px; font-size: 0.85em;">✏️ Editar</button>
@@ -605,39 +599,31 @@ window.cargarPanelAdminCompleto = async function() {
     }
 }
 
-// FUNCIÓN Cambia el estado de notificación de un evento
-window.toggleNotificacion = async function(idEvento, estadoActual) {
-    try {
-        const eventoRef = doc(db, "eventos", idEvento);
-        // Enviamos a Firestore el valor opuesto al actual
-        await updateDoc(eventoRef, { notificar: !estadoActual });
-        
-        mostrarToastNotificacion(!estadoActual ? "🔔 Notificación activada para todos" : "🔕 Notificación ocultada", "exito");
-        
-        // Recargamos silenciosamente el panel para que cambie el color del botón
-        cargarPanelAdminCompleto();
-    } catch (error) {
-        console.error("Error al cambiar notificación:", error);
-        mostrarToastNotificacion("Error al actualizar estado.", "error");
-    }
-}
-
 window.toggleControlesEvento = function(idEvento) {
     const controles = document.getElementById(`controles-${idEvento}`);
     const flecha = document.getElementById(`flecha-${idEvento}`);
     
     if (controles.style.display === "none") {
-        // Expandir
         controles.style.display = "flex";
         flecha.style.transform = "rotate(180deg)";
-        flecha.style.color = "var(--color-primary-dark)"; // Se ilumina al abrir
-        eventosExpandidos.add(idEvento); // Lo guardamos en memoria
+        flecha.style.color = "var(--color-primary-dark)";
+        eventosExpandidos.add(idEvento);
     } else {
-        // Contraer
         controles.style.display = "none";
         flecha.style.transform = "rotate(0deg)";
-        flecha.style.color = "var(--color-text-muted)"; // Se apaga al cerrar
-        eventosExpandidos.delete(idEvento); // Lo borramos de memoria
+        flecha.style.color = "var(--color-text-muted)";
+        eventosExpandidos.delete(idEvento);
+    }
+}
+
+window.toggleNotificacion = async function(idEvento, estadoActual) {
+    try {
+        const eventoRef = doc(db, "eventos", idEvento);
+        await updateDoc(eventoRef, { notificar: !estadoActual });
+        mostrarToastNotificacion(!estadoActual ? "🔔 Notificación activada" : "🔕 Notificación oculta", "exito");
+        cargarPanelAdminCompleto();
+    } catch (error) {
+        console.error(error);
     }
 }
 
@@ -672,7 +658,7 @@ window.mostrarUsuariosAdmin = async function() {
 }
 
 // ==========================================
-// 7. ACCIONES EXTRAS Y UTILIDADES
+// 7. ACCIONES EXTRAS Y UTILIDADES (¡RESTAURADAS!)
 // ==========================================
 window.borrarEvento = async function(idEvento) {
     try {
@@ -857,6 +843,9 @@ window.cerrarModalCodigo = function() {
     document.getElementById('input-nuevo-codigo').value = '';
 }
 
+// ==========================================
+// 7. EXPORTAR EXCEL (Limpio de Objetivos)
+// ==========================================
 window.exportarExcel = async function() {
     mostrarToastNotificacion("Generando Excel...", "aviso");
 
@@ -867,7 +856,7 @@ window.exportarExcel = async function() {
         ]);
 
         const eventos = [];
-        snapshotEventos.forEach(d => eventos.push({ id: d.id, ...d.data() }));
+        snapshotEventEventos.forEach(d => eventos.push({ id: d.id, ...d.data() }));
         const usuarios = [];
         snapshotUsuarios.forEach(d => usuarios.push({ id: d.id, ...d.data() }));
 
@@ -875,7 +864,7 @@ window.exportarExcel = async function() {
 
         const cabecera = ["Nombre", "Email", "Fecha Registro", "Puntos Totales"];
         eventos.forEach(ev => {
-            cabecera.push(`${ev.nombre}`); // Solo 1 columna por evento
+            cabecera.push(`${ev.nombre}`); // Una columna limpia por evento
         });
 
         const filas = usuarios.map(usuario => {
@@ -888,7 +877,7 @@ window.exportarExcel = async function() {
 
             const fila = [usuario.nombre || "", usuario.email || "", fechaRegistro, usuario.puntosTotales || 0];
             eventos.forEach(ev => {
-                fila.push(historialNombres.includes(ev.nombre) ? "Sí" : "No"); // Solo guardamos Asistencia
+                fila.push(historialNombres.includes(ev.nombre) ? "Sí" : "No");
             });
             return fila;
         });
@@ -930,8 +919,9 @@ window.formatearFecha = function(fechaString) {
     const [anio, mes, dia] = fechaString.split('-');
     return `${dia}/${mes}/${anio}`;
 }
+
 // ==========================================
-// MÓDULO: ESTADÍSTICAS
+// MÓDULO: ESTADÍSTICAS (Limpio de Objetivos)
 // ==========================================
 window.abrirModalEstadisticas = async function() {
     document.getElementById('modal-estadisticas').style.display = 'flex';
@@ -940,7 +930,6 @@ window.abrirModalEstadisticas = async function() {
     document.getElementById('tbody-eventos-stats').innerHTML = '';
 
     try {
-        // Una sola ronda de lecturas en paralelo (más eficiente)
         const [snapshotUsuarios, snapshotEventos] = await Promise.all([
             getDocs(collection(db, "usuarios")),
             getDocs(collection(db, "eventos"))
@@ -952,19 +941,16 @@ window.abrirModalEstadisticas = async function() {
         const eventos = [];
         snapshotEventos.forEach(d => eventos.push({ id: d.id, ...d.data() }));
 
-        // Guardamos para reutilizar en la tabla de asistencia
         _datosUsuariosStats = usuarios;
         _datosEventosStats = eventos;
 
         const totalUsuarios = usuarios.length;
         const totalEventos = eventos.length;
 
-        // --- RESUMEN GENERAL ---
         const totalPuntos = usuarios.reduce((sum, u) => sum + (u.puntosTotales || 0), 0);
         const mediaPuntos = totalUsuarios > 0 ? (totalPuntos / totalUsuarios).toFixed(1) : 0;
         const totalFichajes = usuarios.reduce((sum, u) => sum + (u.historial || []).length, 0);
 
-        // El ecotópico más activo
         const masActivo = [...usuarios].sort((a, b) => (b.puntosTotales || 0) - (a.puntosTotales || 0))[0];
 
         document.getElementById('estadisticas-subtitulo').innerText =
@@ -978,15 +964,11 @@ window.abrirModalEstadisticas = async function() {
             ${masActivo ? tarjetaStat('🏆', 'Más puntos', masActivo.nombre.split(' ')[0] + ': ' + (masActivo.puntosTotales || 0) + ' pts') : ''}
         `;
 
-        // --- TABLA POR EVENTO ---
-        // Para cada evento: asistentes reales + cuántos lo tenían como objetivo
         const tbody = document.getElementById('tbody-eventos-stats');
         let htmlFilas = '';
 
-        // Ordenar eventos por asistencia descendente
         const eventosOrdenados = [...eventos].sort((a, b) => (b.asistencia || 0) - (a.asistencia || 0));
 
-        // (Dentro de window.abrirModalEstadisticas, reemplaza el ciclo eventosOrdenados.forEach...)
         eventosOrdenados.forEach(evento => {
             const asistentes = evento.asistencia || 0;
             const porcentaje = totalUsuarios > 0
@@ -1020,8 +1002,6 @@ window.abrirModalEstadisticas = async function() {
 
         tbody.innerHTML = htmlFilas || `<tr><td colspan="3" style="text-align:center; color:#c4c4c4; padding: 20px;">No hay eventos aún.</td></tr>`;
 
-        tbody.innerHTML = htmlFilas || `<tr><td colspan="4" style="text-align:center; color:#c4c4c4; padding: 20px;">No hay eventos aún.</td></tr>`;
-
     } catch (e) {
         console.error("Error al cargar estadísticas:", e);
         document.getElementById('estadisticas-subtitulo').innerText = 'Error al cargar datos.';
@@ -1032,7 +1012,6 @@ window.cerrarModalEstadisticas = function() {
     document.getElementById('modal-estadisticas').style.display = 'none';
 }
 
-// Función auxiliar: genera una tarjetita de stat
 function tarjetaStat(icono, etiqueta, valor) {
     return `
         <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 12px; text-align: center;">
@@ -1044,10 +1023,8 @@ function tarjetaStat(icono, etiqueta, valor) {
 }
 
 // ==========================================
-// MÓDULO: TABLA DE ASISTENCIA
+// MÓDULO: TABLA DE ASISTENCIA (Limpio de Objetivos)
 // ==========================================
-
-// Guardamos los datos cargados en estadísticas para reutilizarlos
 let _datosUsuariosStats = [];
 let _datosEventosStats = [];
 
@@ -1056,15 +1033,9 @@ window.abrirTablaAsistencia = function() {
         return mostrarToastNotificacion("Primero carga las estadísticas.", "aviso");
     }
 
-    const usuarios = [..._datosUsuariosStats].sort((a, b) =>
-        (a.nombre || "").localeCompare(b.nombre || "")
-    );
-    const eventos = [..._datosEventosStats].sort((a, b) =>
-        (b.asistencia || 0) - (a.asistencia || 0)
-    );
+    const usuarios = [..._datosUsuariosStats].sort((a, b) => (a.nombre || "").localeCompare(b.nombre || ""));
+    const eventos = [..._datosEventosStats].sort((a, b) => (b.asistencia || 0) - (a.asistencia || 0));
 
-    // --- CABECERA ---
-    // Primera columna: nombre. Resto: un evento por columna
     let htmlCabecera = `
         <tr>
             <th style="text-align: left; padding: 8px 10px; background: rgba(0,0,0,0.4); color: #a4f5a7; position: sticky; left: 0; z-index: 2; min-width: 130px; border-bottom: 2px solid #62c566;">
@@ -1075,20 +1046,18 @@ window.abrirTablaAsistencia = function() {
             </th>
     `;
     eventos.forEach(ev => {
-            htmlCabecera += `
-                <th style="text-align: center; padding: 6px 8px; background: rgba(0,0,0,0.4); color: #a4f5a7; min-width: 100px; max-width: 130px; border-bottom: 2px solid #62c566; font-weight: normal; font-size: 0.85em; word-break: break-word; vertical-align: bottom;">
-                    ${ev.nombre || 'Sin nombre'}
-                </th>
-            `;
-        });
+        htmlCabecera += `
+            <th style="text-align: center; padding: 6px 8px; background: rgba(0,0,0,0.4); color: #a4f5a7; min-width: 100px; max-width: 130px; border-bottom: 2px solid #62c566; font-weight: normal; font-size: 0.85em; word-break: break-word; vertical-align: bottom;">
+                ${ev.nombre || 'Sin nombre'}
+            </th>
+        `;
+    });
     htmlCabecera += '</tr>';
     document.getElementById('thead-asistencia').innerHTML = htmlCabecera;
 
-    // --- FILAS ---
     let htmlFilas = '';
     usuarios.forEach((usuario, i) => {
         const historialNombres = (usuario.historial || []).map(h => h.nombre);
-        const objetivosIds = usuario.objetivosId || [];
         const bgFila = i % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent';
 
         let fila = `
@@ -1101,7 +1070,6 @@ window.abrirTablaAsistencia = function() {
                 </td>
         `;
 
-        // (Dentro de window.abrirTablaAsistencia, en el ciclo de filas de eventos...)
         eventos.forEach(ev => {
             const asistio = historialNombres.includes(ev.nombre);
 
@@ -1136,7 +1104,7 @@ window.cerrarTablaAsistencia = function() {
 }
 
 // ==========================================
-// MÓDULO: META GLOBAL DEL CURSO
+// MÓDULO: CONFIGURAR META GLOBAL DEL CURSO
 // ==========================================
 window.abrirModalObjetivo = async function() {
     document.getElementById('modal-objetivo-admin').style.display = 'flex';
@@ -1144,7 +1112,6 @@ window.abrirModalObjetivo = async function() {
 
     try {
         const configSnap = await getDoc(doc(db, "config", "objetivo"));
-        // Si no existe aún en la base de datos, mostramos 10 por defecto
         document.getElementById('display-objetivo-actual').innerText = configSnap.exists() ? configSnap.data().meta : '10';
     } catch (error) {
         console.error("Error al cargar la meta:", error);

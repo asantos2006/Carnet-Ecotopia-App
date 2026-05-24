@@ -261,10 +261,8 @@
             <h3 style="color: #62c566; text-align: center; margin-bottom: 5px;">📈 Estadísticas</h3>
             <p id="estadisticas-subtitulo" style="color: #c4c4c4; font-size: 0.8em; text-align: center; margin-bottom: 20px;">Cargando datos...</p>
 
-            <!-- RESUMEN GENERAL -->
             <div id="estadisticas-resumen" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;"></div>
 
-            <!-- TABLA DE EVENTOS -->
             <h4 style="color: var(--color-primary-light); font-size: 0.85em; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">Por Actividad</h4>
             <div style="overflow-x: auto;">
                 <table id="tabla-eventos-stats" style="width: 100%; border-collapse: collapse; font-size: 0.82em; color: white;">
@@ -289,39 +287,37 @@
     </div>
 
     <div id="modal-tabla-asistencia" class="modal-oculto">
-    <div class="contenido-modal" style="max-width: 95vw; width: 700px; text-align: left; max-height: 88vh; display: flex; flex-direction: column;">
-        
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-            <h3 style="color: #62c566;">📋 Tabla de Asistencia</h3>
-            <button onclick="cerrarTablaAsistencia()" style="background: transparent; border: none; color: #ff4d4d; font-size: 1.4em; cursor: pointer;">✕</button>
+        <div class="contenido-modal" style="max-width: 95vw; width: 700px; text-align: left; max-height: 88vh; display: flex; flex-direction: column;">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                <h3 style="color: #62c566;">📋 Tabla de Asistencia</h3>
+                <button onclick="cerrarTablaAsistencia()" style="background: transparent; border: none; color: #ff4d4d; font-size: 1.4em; cursor: pointer;">✕</button>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;">
+                <span style="font-size: 0.75em; display: flex; align-items: center; gap: 5px;">
+                    <span style="width: 12px; height: 12px; background: rgba(98,197,102,0.4); border: 1px solid #62c566; border-radius: 3px; display: inline-block;"></span>
+                    <span style="color: #c4c4c4;">Asistió</span>
+                </span>
+                <span style="font-size: 0.75em; display: flex; align-items: center; gap: 5px;">
+                    <span style="width: 12px; height: 12px; background: rgba(255,77,77,0.18); border: 1px solid rgba(255,77,77,0.3); border-radius: 3px; display: inline-block;"></span>
+                    <span style="color: #c4c4c4;">No participó</span>
+                </span>
+            </div>
+
+            <div style="overflow: auto; flex: 1;">
+                <table id="tabla-asistencia-completa" style="border-collapse: collapse; font-size: 0.78em; color: white; min-width: 100%;">
+                    <thead id="thead-asistencia"></thead>
+                    <tbody id="tbody-asistencia"></tbody>
+                </table>
+            </div>
+
+            <button class="btn-secundario" onclick="cerrarTablaAsistencia()" style="width: 100%; border-color: #ff4d4d; color: #ff4d4d; margin-top: 15px;">
+                ⬅️ Volver a Estadísticas
+            </button>
         </div>
-
-        <!-- Leyenda de colores -->
-        <div style="display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;">
-            <span style="font-size: 0.75em; display: flex; align-items: center; gap: 5px;">
-                <span style="width: 12px; height: 12px; background: rgba(98,197,102,0.4); border: 1px solid #62c566; border-radius: 3px; display: inline-block;"></span>
-                <span style="color: #c4c4c4;">Asistió</span>
-            </span>
-
-            <span style="font-size: 0.75em; display: flex; align-items: center; gap: 5px;">
-                <span style="width: 12px; height: 12px; background: rgba(255,77,77,0.18); border: 1px solid rgba(255,77,77,0.3); border-radius: 3px; display: inline-block;"></span>
-                <span style="color: #c4c4c4;">No participó</span>
-            </span>
-        </div>
-
-        <!-- Tabla con scroll horizontal y vertical -->
-        <div style="overflow: auto; flex: 1;">
-            <table id="tabla-asistencia-completa" style="border-collapse: collapse; font-size: 0.78em; color: white; min-width: 100%;">
-                <thead id="thead-asistencia"></thead>
-                <tbody id="tbody-asistencia"></tbody>
-            </table>
-        </div>
-
-        <button class="btn-secundario" onclick="cerrarTablaAsistencia()" style="width: 100%; border-color: #ff4d4d; color: #ff4d4d; margin-top: 15px;">
-            ⬅️ Volver a Estadísticas
-        </button>
     </div>
-</div>
+
 </body>
 
 </html>

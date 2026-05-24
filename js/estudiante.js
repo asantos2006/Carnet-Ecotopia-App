@@ -65,7 +65,7 @@ window.actualizarProgresoUI = async function(datos) {
     // Texto de progreso dinámico ajustado al nuevo objetivo
     const elementoTexto = document.getElementById("texto-progreso");
     if (elementoTexto) {
-        elementoTexto.innerText = `Has asistido a ${actividadesRealizadas} de ${metaCurso} actividades propuestas este curso`;
+        elementoTexto.innerText = `Has asistido a ${actividadesRealizadas} actividades ¡Vamos a por esa meta de ${metaCurso}!`;
     }
 
     // Stats visuales de las tarjetitas
