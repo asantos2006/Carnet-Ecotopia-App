@@ -28,12 +28,24 @@ window.actualizarProgresoUI = async function(datos) {
     const actividadesRealizadas = historial.length;
     const puntosTotales = datos.puntosTotales || 0;
 
-    // Total de eventos en la BD
+    // 1. Consultamos el total de eventos reales por seguridad / fallback
     const eventosSnapshot = await getDocs(collection(db, "eventos"));
-    const totalEventos = eventosSnapshot.size;
+    const totalEventosRealizados = eventosSnapshot.size;
 
-    const porcentaje = totalEventos > 0
-        ? Math.min(Math.round((actividadesRealizadas / totalEventos) * 100), 100)
+    // 2. NUEVA LÓGICA: Leemos el objetivo único fijado por el Admin en Firestore
+    let metaCurso = totalEventosRealizados > 0 ? totalEventosRealizados : 10; // Fallback inteligente
+    try {
+        const configSnap = await getDoc(doc(db, "config", "objetivo"));
+        if (configSnap.exists()) {
+            metaCurso = configSnap.data().meta || metaCurso;
+        }
+    } catch (e) {
+        console.error("Error al cargar la meta global, usando eventos totales:", e);
+    }
+
+    // Calcular el porcentaje basándonos en la meta manual del administrador
+    const porcentaje = metaCurso > 0
+        ? Math.min(Math.round((actividadesRealizadas / metaCurso) * 100), 100)
         : 0;
 
     // Racha: eventos asistidos en los últimos 30 días consecutivos
@@ -46,22 +58,20 @@ window.actualizarProgresoUI = async function(datos) {
         return f >= hace30dias;
     }).length;
 
-// Barra de progreso
+    // Barra de progreso horizontal
     const barra = document.getElementById('barra-progreso-perfil');
     if (barra) barra.style.width = `${porcentaje}%`;
 
-    // Texto
+    // Texto de progreso dinámico ajustado al nuevo objetivo
     const elementoTexto = document.getElementById("texto-progreso");
     if (elementoTexto) {
-        elementoTexto.innerText = `Has asistido a ${actividadesRealizadas} de ${totalEventos} actividades este curso`;
+        elementoTexto.innerText = `Has asistido a ${actividadesRealizadas} de ${metaCurso} actividades propuestas este curso`;
     }
 
-    // Stats
-    const statAsistidas = document.getElementById('stat-asistidas');
+    // Stats visuales de las tarjetitas
     const statPuntos = document.getElementById('stat-puntos');
     const statRacha = document.getElementById('stat-racha');
 
-    if (statAsistidas) statAsistidas.innerText = actividadesRealizadas;
     if (statPuntos) statPuntos.innerText = puntosTotales;
     if (statRacha) statRacha.innerText = racha > 0 ? racha : '—';
 }

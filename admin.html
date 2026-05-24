@@ -34,18 +34,23 @@
 
             <section class="seccion-admin">
                 <h3 style="color: white; font-size: 0.9em; margin-bottom: 10px;">2. Ecotópicos</h3>
+
+                <button class="btn-puntos" onclick="abrirModalEstadisticas()" style="margin-bottom: 12px; width: 100%; background: transparent; border: 1px solid var(--color-primary-dark); color: var(--color-primary-dark);">
+                    📈 Estadísticas
+                </button>
+
+                <div id="lista-usuarios" class="contenedor-lista">
+                    <p style="color: rgba(255,255,255,0.6);">Cargando estudiantes...</p>
+                </div>
                 <button class="btn-puntos" onclick="abrirModalCodigo()" style="margin-bottom: 12px; width: 100%; background: transparent; border: 1px solid var(--color-primary-dark); color: var(--color-primary-dark);">
                     🔑 Código de Registro
+                </button>
+                <button class="btn-puntos" onclick="abrirModalObjetivo()" style="margin-bottom: 12px; width: 100%; background: transparent; border: 1px solid var(--color-primary-dark); color: var(--color-primary-dark);">
+                    🎯 Meta del Curso
                 </button>
                 <button class="btn-puntos" onclick="exportarExcel()" style="margin-bottom: 12px; width: 100%; background: transparent; border: 1px solid var(--color-primary-dark); color: var(--color-primary-dark);">
                     📊 Exportar Excel
                 </button>
-                <button class="btn-puntos" onclick="abrirModalEstadisticas()" style="margin-bottom: 12px; width: 100%; background: transparent; border: 1px solid var(--color-primary-dark); color: var(--color-primary-dark);">
-                    📈 Estadísticas
-                </button>
-                <div id="lista-usuarios" class="contenedor-lista">
-                    <p style="color: rgba(255,255,255,0.6);">Cargando estudiantes...</p>
-                </div>
             </section>
 
             <button class="btn-secundario" onclick="window.location.href='principal.html'" style="margin-top: 20px; width: 100%;">
@@ -236,6 +241,18 @@
             <button class="btn-secundario" onclick="cerrarModalCategorias()" style="width: 100%; border-color: #ff4d4d; color: #ff4d4d;">
                 ⬅️ Volver al Panel
             </button>
+        </div>
+    </div>
+
+    <div id="modal-objetivo-admin" class="modal-oculto">
+        <div class="contenido-modal" style="max-width: 340px;">
+            <h3 style="color: #62c566; margin-bottom: 5px;">🎯 Meta de Actividades</h3>
+            <p style="color: #c4c4c4; font-size: 0.85em; margin-bottom: 20px;">Establece el número total de actividades recomendadas u obligatorias para el curso.</p>
+            <p style="color: #c4c4c4; font-size: 0.85em; margin-bottom: 8px;">Meta actual:</p>
+            <div id="display-objetivo-actual" style="font-size: 3.5em; font-weight: bold; color: #62c566; text-shadow: 0 0 15px rgba(98, 197, 102, 0.6); margin-bottom: 25px;">--</div>
+            <input type="number" id="input-nuevo-objetivo" placeholder="Ej. 10" class="input-estilo" style="text-align: center; font-size: 1.4em; padding: 12px; width: 100%; margin-bottom: 12px;" min="1">
+            <button class="btn-puntos" onclick="cambiarObjetivoCurso()" style="width: 100%; margin-bottom: 10px;">Actualizar Meta</button>
+            <button class="btn-secundario" onclick="cerrarModalObjetivo()" style="width: 100%; border-color: #ff4d4d; color: #ff4d4d;">❌ Cerrar</button>
         </div>
     </div>
 

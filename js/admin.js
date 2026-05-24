@@ -1134,3 +1134,41 @@ window.abrirTablaAsistencia = function() {
 window.cerrarTablaAsistencia = function() {
     document.getElementById('modal-tabla-asistencia').style.display = 'none';
 }
+
+// ==========================================
+// MÓDULO: META GLOBAL DEL CURSO
+// ==========================================
+window.abrirModalObjetivo = async function() {
+    document.getElementById('modal-objetivo-admin').style.display = 'flex';
+    document.getElementById('display-objetivo-actual').innerText = '...';
+
+    try {
+        const configSnap = await getDoc(doc(db, "config", "objetivo"));
+        // Si no existe aún en la base de datos, mostramos 10 por defecto
+        document.getElementById('display-objetivo-actual').innerText = configSnap.exists() ? configSnap.data().meta : '10';
+    } catch (error) {
+        console.error("Error al cargar la meta:", error);
+    }
+}
+
+window.cambiarObjetivoCurso = async function() {
+    const nuevaMeta = parseInt(document.getElementById('input-nuevo-objetivo').value.trim());
+    if (isNaN(nuevaMeta) || nuevaMeta <= 0) {
+        return mostrarToastNotificacion("Introduce un número válido mayor que 0.", "aviso");
+    }
+
+    try {
+        await setDoc(doc(db, "config", "objetivo"), { meta: nuevaMeta });
+        document.getElementById('display-objetivo-actual').innerText = nuevaMeta;
+        document.getElementById('input-nuevo-objetivo').value = '';
+        mostrarToastNotificacion("✅ Meta del curso actualizada.", "exito");
+    } catch (error) {
+        console.error("Error al cambiar la meta:", error);
+        mostrarToastNotificacion("Error al guardar en la base de datos.", "error");
+    }
+}
+
+window.cerrarModalObjetivo = function() {
+    document.getElementById('modal-objetivo-admin').style.display = 'none';
+    document.getElementById('input-nuevo-objetivo').value = '';
+}
