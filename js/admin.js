@@ -517,6 +517,13 @@ window.procesarBorradoFichaje = async function(idUsuario, nombreEvento, historia
 // ==========================================
 // 6. RENDERIZADO DEL PANEL PRINCIPAL
 // ==========================================
+// ==========================================
+// 6. RENDERIZADO DEL PANEL PRINCIPAL
+// ==========================================
+
+// Memoria caché para recordar qué tarjetas están abiertas al recargar datos
+const eventosExpandidos = new Set();
+
 window.cargarPanelAdminCompleto = async function() {
     const contenedorEventos = document.getElementById('lista-eventos-admin');
     if (!contenedorEventos) return;
@@ -529,32 +536,64 @@ window.cargarPanelAdminCompleto = async function() {
             const evento = docEvento.data();
             const idEvento = docEvento.id;
             
+            // --- Lógica de Notificaciones ---
+            const estaNotificado = evento.notificar === true;
+            const textoNotificar = estaNotificado ? "🔕 Ocultar" : "🔔 Notificar";
+            const bgNotificar = estaNotificado ? "rgba(98, 197, 102, 0.2)" : "transparent";
+            const colorNotificar = estaNotificado ? "var(--color-primary-dark)" : "#c4c4c4";
+
+            // --- Lógica de Desplegable (Acordeón) ---
+            const estaAbierto = eventosExpandidos.has(idEvento);
+            const displayControles = estaAbierto ? "flex" : "none";
+            const transformFlecha = estaAbierto ? "rotate(180deg)" : "rotate(0deg)";
+            const colorFlecha = estaAbierto ? "var(--color-primary-dark)" : "var(--color-text-muted)";
+
             html += `
-                <div class="fila-usuario">
+                <div class="fila-usuario" style="flex-direction: column; padding-bottom: 5px;">
                     <div style="width: 100%;">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-                            <div style="flex: 1;">
-                                <strong style="color: var(--color-primary-dark); font-size: 1.15em; word-break: break-word;">
+                        <!-- CABECERA DEL EVENTO (Siempre visible) -->
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+                            <div style="flex: 1; min-width: 0;">
+                                <strong style="color: var(--color-primary-dark); font-size: 1em; word-break: break-word; display: block; line-height: 1.3;">
                                     ${evento.nombre || "Sin nombre"}
-                                    ${evento.categoria ? `<span class="tag-puntos" style="background: rgba(98, 197, 102, 0.2); color: var(--color-primary-light); margin-bottom: 5px; display: inline-block;">🏷️ ${evento.categoria}</span>` : ''}
                                 </strong>
                                 <p style="color: #c4c4c4; font-size: 0.75em; margin-top: 3px;">
                                     ${evento.fechaEvento ? `📅 ${formatearFecha(evento.fechaEvento)}` : '📅 Sin fecha'}
                                 </p>
                             </div>
-                            <span class="tag-puntos" style="font-size: 0.75em;">${evento.puntosRecompensa || 0} Pts</span>
-                            <span class="tag-puntos" style="font-size: 0.75em;">${evento.asistencia || 0} 👥</span>
+                            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; max-width: 90px;">
+                                <div style="display: flex; gap: 4px;">
+                                    <span class="tag-puntos" style="font-size: 0.75em;">${evento.puntosRecompensa || 0} Pts</span>
+                                    <span class="tag-puntos" style="font-size: 0.75em;">${evento.asistencia || 0} 👥</span>
+                                </div>
+                                ${evento.categoria ? `<span class="tag-puntos" style="background: rgba(98, 197, 102, 0.2); color: var(--color-primary-light); font-size: 0.65em; padding: 2px 6px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block;">🏷️ ${evento.categoria}</span>` : ''}                            
+                            </div>
                         </div>
 
-                        <div style="display: flex; gap: 6px; margin-bottom: 6px;">
-                            <button class="btn-icono-verde" onclick="abrirModalEditarEvento('${idEvento}')" style="flex: 1; padding: 5px; font-size: 0.85em;">✏️ Editar</button>
-                            <button class="btn-icono-verde" onclick="abrirCamaraModal('${idEvento}')" style="flex: 1; padding: 5px; font-size: 0.85em;">📷 QR</button>
-                            <button class="btn-icono-rojo" onclick="borrarEvento('${idEvento}')" style="flex: 1; padding: 5px; font-size: 0.85em;">🗑️ Borrar</button>
+                        <!-- FLECHA DESPLEGABLE -->
+                        <div style="display: flex; justify-content: flex-start; margin-top: 0px;">
+                            <button id="flecha-${idEvento}" onclick="toggleControlesEvento('${idEvento}')" style="background: transparent; border: none; color: ${colorFlecha}; font-size: 0.8em; cursor: pointer; padding: 4px 8px; transform: ${transformFlecha}; transition: transform 0.3s ease, color 0.3s ease;">
+                                ▼
+                            </button>
                         </div>
 
-                        <button class="btn-puntos" onclick="abrirModalAsistencia('${idEvento}')" style="width: 100%; padding: 6px; font-size: 0.85em; background: transparent; border: 1px solid var(--color-primary-light); color: var(--color-primary-light); margin-bottom: 4px;">
-                            👥 Asistencia Manual
-                        </button>
+                        <!-- CONTROLES OCULTOS -->
+                        <div id="controles-${idEvento}" style="display: ${displayControles}; flex-direction: column; margin-top: 5px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 10px;">
+                            <div style="display: flex; gap: 6px; margin-bottom: 6px;">
+                                <button class="btn-icono-verde" onclick="abrirModalEditarEvento('${idEvento}')" style="flex: 1; padding: 5px; font-size: 0.85em;">✏️ Editar</button>
+                                <button class="btn-icono-verde" onclick="abrirCamaraModal('${idEvento}')" style="flex: 1; padding: 5px; font-size: 0.85em;">📷 QR</button>
+                                <button class="btn-icono-rojo" onclick="borrarEvento('${idEvento}')" style="flex: 1; padding: 5px; font-size: 0.85em;">🗑️ Borrar</button>
+                            </div>
+
+                            <div style="display: flex; gap: 6px; margin-bottom: 4px;">
+                                <button class="btn-puntos" onclick="abrirModalAsistencia('${idEvento}')" style="flex: 1; padding: 6px; font-size: 0.85em; background: transparent; border: 1px solid var(--color-primary-light); color: var(--color-primary-light);">
+                                    👥 Asistencia
+                                </button>
+                                <button class="btn-puntos" onclick="toggleNotificacion('${idEvento}', ${estaNotificado})" style="flex: 1; padding: 6px; font-size: 0.85em; background: ${bgNotificar}; border: 1px solid ${colorNotificar}; color: ${colorNotificar};">
+                                    ${textoNotificar}
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             `;
@@ -563,6 +602,42 @@ window.cargarPanelAdminCompleto = async function() {
         contenedorEventos.innerHTML = html;
     } catch (e) {
         console.error("Error al cargar panel:", e);
+    }
+}
+
+// FUNCIÓN Cambia el estado de notificación de un evento
+window.toggleNotificacion = async function(idEvento, estadoActual) {
+    try {
+        const eventoRef = doc(db, "eventos", idEvento);
+        // Enviamos a Firestore el valor opuesto al actual
+        await updateDoc(eventoRef, { notificar: !estadoActual });
+        
+        mostrarToastNotificacion(!estadoActual ? "🔔 Notificación activada para todos" : "🔕 Notificación ocultada", "exito");
+        
+        // Recargamos silenciosamente el panel para que cambie el color del botón
+        cargarPanelAdminCompleto();
+    } catch (error) {
+        console.error("Error al cambiar notificación:", error);
+        mostrarToastNotificacion("Error al actualizar estado.", "error");
+    }
+}
+
+window.toggleControlesEvento = function(idEvento) {
+    const controles = document.getElementById(`controles-${idEvento}`);
+    const flecha = document.getElementById(`flecha-${idEvento}`);
+    
+    if (controles.style.display === "none") {
+        // Expandir
+        controles.style.display = "flex";
+        flecha.style.transform = "rotate(180deg)";
+        flecha.style.color = "var(--color-primary-dark)"; // Se ilumina al abrir
+        eventosExpandidos.add(idEvento); // Lo guardamos en memoria
+    } else {
+        // Contraer
+        controles.style.display = "none";
+        flecha.style.transform = "rotate(0deg)";
+        flecha.style.color = "var(--color-text-muted)"; // Se apaga al cerrar
+        eventosExpandidos.delete(idEvento); // Lo borramos de memoria
     }
 }
 
@@ -800,13 +875,11 @@ window.exportarExcel = async function() {
 
         const cabecera = ["Nombre", "Email", "Fecha Registro", "Puntos Totales"];
         eventos.forEach(ev => {
-            cabecera.push(`${ev.nombre} - Objetivo`);
-            cabecera.push(`${ev.nombre} - Hecho`);
+            cabecera.push(`${ev.nombre}`); // Solo 1 columna por evento
         });
 
         const filas = usuarios.map(usuario => {
             const historialNombres = (usuario.historial || []).map(h => h.nombre);
-            const objetivosIds = usuario.objetivosId || [];
             let fechaRegistro = "";
             if (usuario.fechaRegistro) {
                 const fecha = usuario.fechaRegistro.toDate ? usuario.fechaRegistro.toDate() : new Date(usuario.fechaRegistro);
@@ -815,15 +888,14 @@ window.exportarExcel = async function() {
 
             const fila = [usuario.nombre || "", usuario.email || "", fechaRegistro, usuario.puntosTotales || 0];
             eventos.forEach(ev => {
-                fila.push(objetivosIds.includes(ev.id) ? "Sí" : "No");
-                fila.push(historialNombres.includes(ev.nombre) ? "Sí" : "No");
+                fila.push(historialNombres.includes(ev.nombre) ? "Sí" : "No"); // Solo guardamos Asistencia
             });
             return fila;
         });
 
         const fecha = new Date();
         const filaEventos = ["", "", "", ""];
-        eventos.forEach(ev => { filaEventos.push(`👥 ${ev.asistencia || 0} asistentes`); filaEventos.push(""); });
+        eventos.forEach(ev => { filaEventos.push(`👥 ${ev.asistencia || 0} asistentes`); });
 
         const datosHoja = [
             [`Informe Carné Ecotópico`],
@@ -837,7 +909,7 @@ window.exportarExcel = async function() {
 
         const libro = XLSX.utils.book_new();
         const hoja = XLSX.utils.aoa_to_sheet(datosHoja);
-        hoja['!cols'] = cabecera.map((_, i) => ({ wch: i === 0 ? 20 : i === 1 ? 25 : i === 2 ? 15 : 10 }));
+        hoja['!cols'] = cabecera.map((_, i) => ({ wch: i === 0 ? 20 : i === 1 ? 25 : i === 2 ? 15 : 12 }));
         XLSX.utils.book_append_sheet(libro, hoja, "Ecotópicos");
         XLSX.writeFile(libro, `ecotopia_informe_${fecha.toISOString().slice(0,10)}.xlsx`);
         
@@ -857,4 +929,208 @@ window.formatearFecha = function(fechaString) {
     }
     const [anio, mes, dia] = fechaString.split('-');
     return `${dia}/${mes}/${anio}`;
+}
+// ==========================================
+// MÓDULO: ESTADÍSTICAS
+// ==========================================
+window.abrirModalEstadisticas = async function() {
+    document.getElementById('modal-estadisticas').style.display = 'flex';
+    document.getElementById('estadisticas-subtitulo').innerText = 'Cargando datos...';
+    document.getElementById('estadisticas-resumen').innerHTML = '';
+    document.getElementById('tbody-eventos-stats').innerHTML = '';
+
+    try {
+        // Una sola ronda de lecturas en paralelo (más eficiente)
+        const [snapshotUsuarios, snapshotEventos] = await Promise.all([
+            getDocs(collection(db, "usuarios")),
+            getDocs(collection(db, "eventos"))
+        ]);
+
+        const usuarios = [];
+        snapshotUsuarios.forEach(d => usuarios.push({ id: d.id, ...d.data() }));
+
+        const eventos = [];
+        snapshotEventos.forEach(d => eventos.push({ id: d.id, ...d.data() }));
+
+        // Guardamos para reutilizar en la tabla de asistencia
+        _datosUsuariosStats = usuarios;
+        _datosEventosStats = eventos;
+
+        const totalUsuarios = usuarios.length;
+        const totalEventos = eventos.length;
+
+        // --- RESUMEN GENERAL ---
+        const totalPuntos = usuarios.reduce((sum, u) => sum + (u.puntosTotales || 0), 0);
+        const mediaPuntos = totalUsuarios > 0 ? (totalPuntos / totalUsuarios).toFixed(1) : 0;
+        const totalFichajes = usuarios.reduce((sum, u) => sum + (u.historial || []).length, 0);
+
+        // El ecotópico más activo
+        const masActivo = [...usuarios].sort((a, b) => (b.puntosTotales || 0) - (a.puntosTotales || 0))[0];
+
+        document.getElementById('estadisticas-subtitulo').innerText =
+            `${totalUsuarios} ecotópicos · ${totalEventos} actividades`;
+
+        document.getElementById('estadisticas-resumen').innerHTML = `
+            ${tarjetaStat('👥', 'Total ecotópicos', totalUsuarios)}
+            ${tarjetaStat('🌿', 'Total actividades', totalEventos)}
+            ${tarjetaStat('⚡', 'Media de puntos', mediaPuntos + ' pts')}
+            ${tarjetaStat('📋', 'Fichajes totales', totalFichajes)}
+            ${masActivo ? tarjetaStat('🏆', 'Más puntos', masActivo.nombre.split(' ')[0] + ': ' + (masActivo.puntosTotales || 0) + ' pts') : ''}
+        `;
+
+        // --- TABLA POR EVENTO ---
+        // Para cada evento: asistentes reales + cuántos lo tenían como objetivo
+        const tbody = document.getElementById('tbody-eventos-stats');
+        let htmlFilas = '';
+
+        // Ordenar eventos por asistencia descendente
+        const eventosOrdenados = [...eventos].sort((a, b) => (b.asistencia || 0) - (a.asistencia || 0));
+
+        // (Dentro de window.abrirModalEstadisticas, reemplaza el ciclo eventosOrdenados.forEach...)
+        eventosOrdenados.forEach(evento => {
+            const asistentes = evento.asistencia || 0;
+            const porcentaje = totalUsuarios > 0
+                ? Math.round((asistentes / totalUsuarios) * 100)
+                : 0;
+
+            const colorBarra = porcentaje >= 75 ? '#62c566'
+                             : porcentaje >= 40 ? '#ffcc00'
+                             : '#ff6b6b';
+
+            htmlFilas += `
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);">
+                    <td style="padding: 8px 4px; color: white; max-width: 150px; word-break: break-word;">
+                        ${evento.nombre || 'Sin nombre'}
+                        ${evento.categoria ? `<br><span style="color: var(--color-primary-light); font-size: 0.75em;">🏷️ ${evento.categoria}</span>` : ''}
+                    </td>
+                    <td style="text-align: center; padding: 8px 4px; font-weight: bold; color: var(--color-primary-light);">
+                        ${asistentes}
+                    </td>
+                    <td style="text-align: center; padding: 8px 4px;">
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 3px;">
+                            <span style="font-weight: bold; color: ${colorBarra};">${porcentaje}%</span>
+                            <div style="width: 60px; height: 5px; background: rgba(255,255,255,0.15); border-radius: 3px; overflow: hidden;">
+                                <div style="width: ${porcentaje}%; height: 100%; background: ${colorBarra}; border-radius: 3px;"></div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+
+        tbody.innerHTML = htmlFilas || `<tr><td colspan="3" style="text-align:center; color:#c4c4c4; padding: 20px;">No hay eventos aún.</td></tr>`;
+
+        tbody.innerHTML = htmlFilas || `<tr><td colspan="4" style="text-align:center; color:#c4c4c4; padding: 20px;">No hay eventos aún.</td></tr>`;
+
+    } catch (e) {
+        console.error("Error al cargar estadísticas:", e);
+        document.getElementById('estadisticas-subtitulo').innerText = 'Error al cargar datos.';
+    }
+}
+
+window.cerrarModalEstadisticas = function() {
+    document.getElementById('modal-estadisticas').style.display = 'none';
+}
+
+// Función auxiliar: genera una tarjetita de stat
+function tarjetaStat(icono, etiqueta, valor) {
+    return `
+        <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 12px; text-align: center;">
+            <div style="font-size: 1.4em; margin-bottom: 4px;">${icono}</div>
+            <div style="color: var(--color-primary-light); font-weight: bold; font-size: 1em;">${valor}</div>
+            <div style="color: #c4c4c4; font-size: 0.72em; margin-top: 2px;">${etiqueta}</div>
+        </div>
+    `;
+}
+
+// ==========================================
+// MÓDULO: TABLA DE ASISTENCIA
+// ==========================================
+
+// Guardamos los datos cargados en estadísticas para reutilizarlos
+let _datosUsuariosStats = [];
+let _datosEventosStats = [];
+
+window.abrirTablaAsistencia = function() {
+    if (_datosUsuariosStats.length === 0) {
+        return mostrarToastNotificacion("Primero carga las estadísticas.", "aviso");
+    }
+
+    const usuarios = [..._datosUsuariosStats].sort((a, b) =>
+        (a.nombre || "").localeCompare(b.nombre || "")
+    );
+    const eventos = [..._datosEventosStats].sort((a, b) =>
+        (b.asistencia || 0) - (a.asistencia || 0)
+    );
+
+    // --- CABECERA ---
+    // Primera columna: nombre. Resto: un evento por columna
+    let htmlCabecera = `
+        <tr>
+            <th style="text-align: left; padding: 8px 10px; background: rgba(0,0,0,0.4); color: #a4f5a7; position: sticky; left: 0; z-index: 2; min-width: 130px; border-bottom: 2px solid #62c566;">
+                Ecotópico
+            </th>
+            <th style="text-align: center; padding: 8px 6px; background: rgba(0,0,0,0.4); color: #a4f5a7; min-width: 50px; border-bottom: 2px solid #62c566;">
+                Pts
+            </th>
+    `;
+    eventos.forEach(ev => {
+            htmlCabecera += `
+                <th style="text-align: center; padding: 6px 8px; background: rgba(0,0,0,0.4); color: #a4f5a7; min-width: 100px; max-width: 130px; border-bottom: 2px solid #62c566; font-weight: normal; font-size: 0.85em; word-break: break-word; vertical-align: bottom;">
+                    ${ev.nombre || 'Sin nombre'}
+                </th>
+            `;
+        });
+    htmlCabecera += '</tr>';
+    document.getElementById('thead-asistencia').innerHTML = htmlCabecera;
+
+    // --- FILAS ---
+    let htmlFilas = '';
+    usuarios.forEach((usuario, i) => {
+        const historialNombres = (usuario.historial || []).map(h => h.nombre);
+        const objetivosIds = usuario.objetivosId || [];
+        const bgFila = i % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent';
+
+        let fila = `
+            <tr style="background: ${bgFila};">
+                <td style="padding: 7px 10px; color: white; font-weight: bold; position: sticky; left: 0; background: #0d1a0e; z-index: 1; border-bottom: 1px solid rgba(255,255,255,0.06); white-space: nowrap;">
+                    ${usuario.nombre || 'Sin nombre'}
+                </td>
+                <td style="text-align: center; padding: 7px 4px; color: var(--color-primary-light); font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.06);">
+                    ${usuario.puntosTotales || 0}
+                </td>
+        `;
+
+        // (Dentro de window.abrirTablaAsistencia, en el ciclo de filas de eventos...)
+        eventos.forEach(ev => {
+            const asistio = historialNombres.includes(ev.nombre);
+
+            let bg, borde, icono;
+            if (asistio) {
+                bg = 'rgba(98, 197, 102, 0.25)';
+                borde = '1px solid rgba(98,197,102,0.4)';
+                icono = '✅';
+            } else {
+                bg = 'rgba(255, 77, 77, 0.18)';
+                borde = '1px solid rgba(255,77,77,0.3)';
+                icono = '❌';
+            }
+
+            fila += `
+                <td style="text-align: center; padding: 7px 4px; background: ${bg}; border: ${borde}; font-size: 0.9em;">
+                    ${icono}
+                </td>
+            `;
+        });
+
+        fila += '</tr>';
+        htmlFilas += fila;
+    });
+
+    document.getElementById('tbody-asistencia').innerHTML = htmlFilas;
+    document.getElementById('modal-tabla-asistencia').style.display = 'flex';
+}
+
+window.cerrarTablaAsistencia = function() {
+    document.getElementById('modal-tabla-asistencia').style.display = 'none';
 }

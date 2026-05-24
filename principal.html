@@ -4,86 +4,109 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi Carnet Ecotópico</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
     <link rel="manifest" href="manifest.json">
     <!-- Librería QR -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script type="module" src="firebase.config.js"></script>
-    <script type="module" src="auth.js"></script>
-    <script type="module" src="estudiante.js"></script>
+    <script type="module" src="js/firebase.config.js"></script>
+    <script type="module" src="js/auth.js"></script>
+    <script type="module" src="js/estudiante.js"></script>
 </head>
-<div id="toast-notificacion" class="toast-oculto"></div>
+
 <body>
+    <div id="toast-notificacion" class="toast-oculto"></div>
 
     <div class="tarjeta app-principal">
-        
-        <!-- SECCIÓN 1: Perfil del Usuario -->
-        <div class="perfil-usuario">
-            <div class="info-texto">
-                <h3 id="nombre-usuario">Cargando...</h3>
-                <p class="id-usuario"> </p>
-                
-                <p id = "texto-meta"> ¡¡Marcaté un Objetivo de EcoPoints!!</p>
-            </div>
-            <div class="progreso-circular-wrapper">
-                <!-- Este es el anillo que cambiará de color -->
-                <div id="anillo-progreso" class="anillo-relleno"></div>
-                <!-- Este es el texto que ahora estará centrado perfectamente -->
-                <span id="porcentaje-texto">0%</span>
-            </div>
-            
-        </div>
 
-        <hr class="separador">
+        <!-- ALERTAS DE PRÓXIMOS EVENTOS -->
+        <div id="alertas-proximos-eventos"></div>
 
-        <!-- SECCIÓN 2: Lista de Objetivos -->
-        <div class="lista-objetivos">
-            <!-- Botón para abrir los objetivos -->
-            <div style="text-align: center; margin: 20px 0;">
-                <button class="btn-secundario" onclick="abrirModalObjetivos()" style="border-color: #a4f5a7; color: #a4f5a7;">
-                    🎯 Mis Objetivos
+        <!-- MODAL DETALLE EVENTO -->
+        <div id="modal-detalle-evento" class="modal-oculto">
+            <div class="contenido-modal" style="max-width: 400px; text-align: left;">
+                <h3 id="detalle-nombre" style="color: #62c566; text-align: center; margin-bottom: 5px;"></h3>
+                <p id="detalle-categoria" style="color: var(--color-primary-light); font-size: 0.75em; text-align: center; margin-bottom: 15px;"></p>
+
+                <div id="detalle-fecha-lugar" style="background: rgba(255,255,255,0.05); border-radius: 8px; padding: 10px; margin-bottom: 12px; font-size: 0.85em; color: #c4c4c4; display: flex; flex-direction: column; gap: 5px;"></div>
+
+                <div id="detalle-descripcion-bloque" style="margin-bottom: 12px;">
+                    <p id="detalle-descripcion" style="color: #c4c4c4; font-size: 0.85em; line-height: 1.5;"></p>
+                </div>
+
+                <div id="detalle-ponentes-bloque" style="margin-bottom: 15px;">
+                    <p style="color: var(--color-primary-light); font-size: 0.8em; font-weight: bold; margin-bottom: 6px;">🎙️ Ponentes</p>
+                    <div id="detalle-ponentes"></div>
+                </div>
+
+                <div style="background: rgba(98,197,102,0.1); border: 1px solid rgba(98,197,102,0.3); border-radius: 8px; padding: 10px; text-align: center; margin-bottom: 15px;">
+                    <span style="color: #a4f5a7; font-size: 0.8em;"> <span id="detalle-puntos" style="color: #62c566; font-weight: bold;"></span> EcoPoints por asistir</span> 
+                </div>
+
+                <button class="btn-secundario" onclick="cerrarModalDetalleEvento()" style="width: 100%; border-color: #ff4d4d; color: #ff4d4d;">
+                    ⬅️ Cerrar
                 </button>
             </div>
-            <div id="modal-objetivos" class="modal-oculto">
-                <div class="contenido-modal" style="max-width: 400px; text-align: left;">
-                    <h3 style="color: #62c566; text-align: center; margin-bottom: 10px;">🎯 Elige tus Metas</h3>
-                    <p style="color: #c4c4c4; font-size: 0.8em; text-align: center; margin-bottom: 15px;">Marca los eventos en los que quieres participar. Tu meta se ajustará automáticamente.</p>
-                    
-                    <!-- Lista de eventos con Checkboxes -->
-                    <div id="lista-eventos-objetivos" style="max-height: 250px; overflow-y: auto; margin-bottom: 15px; padding-right: 5px;">
-                        <!-- JavaScript inyectará aquí los eventos -->
-                    </div>
+        </div>
+        
+           <!-- SECCIÓN 1: Carné — Nombre + EcoPoints + QR -->
+    <div class="perfil-usuario">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <div>
+                <p style="color: var(--color-primary-light); font-size: 0.7em; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px;">Carné Ecotópico</p>
+                <h3 id="nombre-usuario" style="color: white; font-size: 1.2em;">Cargando...</h3>
+            </div>
+            <div style="text-align: right;">
+                <p style="color: var(--color-primary-light); font-size: 0.7em; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px;">EcoPoints</p>
+                <span id="stat-puntos" style="color: var(--color-primary-dark); font-weight: bold; font-size: 1.4em;">—</span>
+            </div>
+        </div>
+        <div id="qrcode"></div>
+    </div>
 
-                    <!-- Botones de Acción -->
-                    <div style="display: flex; gap: 10px;">
-                        <button class="btn-secundario" onclick="cerrarModalObjetivos()" style="flex: 1; border-color: #ff4d4d; color: #ff4d4d;">Cancelar</button>
-                        <button class="btn-puntos" onclick="guardarObjetivos()" style="flex: 1;">Guardar Metas</button>
-                    </div>
-                </div>
-            </div>
-            
-            <h4>Actividades Realizadas</h4>
-            <div id="lista-actividades-usuario" class="contenedor-actividades">
-                <p id="mensaje-vacio" style="font-size: 0.8em; color: rgba(255,255,255,0.5);">Aún no has participado en eventos.</p>
-            </div>
-        </div> 
-        <!-- Opción: Boton actualizar -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
-            <h3 class="titulo-seccion">Mis Objetivos</h3>
-            <button class="btn-puntos" onclick="recargarDatosManual()" style="padding: 5px 10px; font-size: 0.7em;">
-                🔄 Actualizar
+    <hr class="separador">
+
+    <!-- SECCIÓN 2: Actividades -->
+    <div>
+
+        <!-- Cabecera: título + botón actualizar -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h4 style="color: var(--color-primary); font-size: 0.85em; text-transform: uppercase; letter-spacing: 1px;">Actividades</h4>
+            <button onclick="recargarDatosManual()" style="background: rgba(98,197,102,0.15); border: 1px solid var(--color-primary-dark); color: var(--color-primary-dark); border-radius: 20px; padding: 3px 10px; font-size: 0.65em; cursor: pointer; font-weight: bold;">
+                🔄
             </button>
         </div>
-        <hr class="separador">
 
-        <!-- SECCIÓN 3: Código QR -->
-        <div id="qrcode"></div> <!-- Dejamos que el CSS controle el estilo -->
+        <!-- Racha -->
+        <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px 14px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="color: var(--color-text-muted); font-size: 0.8em;">Racha últimos 30 días</span>
+            <span id="stat-racha" style="color: var(--color-primary-light); font-weight: bold; font-size: 1em;">— 🔥</span>
+        </div>
 
-        <hr class="separador">
+        <!-- Barra de progreso -->
+        <div style="margin-bottom: 6px;">
+            <div style="background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px; overflow: hidden;">
+                <div id="barra-progreso-perfil" style="height: 100%; width: 0%; background: var(--color-primary-dark); border-radius: 4px; box-shadow: 0 0 8px rgba(98,197,102,0.5); transition: width 0.6s ease;"></div>
+            </div>
+        </div>
+        <p id="texto-progreso" style="color: var(--color-text-muted); font-size: 0.75em; margin-bottom: 16px;">Cargando...</p>
 
-        <!-- SECCIÓN 4: Botón para salir (Llamando a la función real de cerrar sesión) -->
-        <button class="btn-secundario mt-20" onclick="cerrarSesion()">CERRAR SESIÓN</button>
-        
+        <!-- Lista de eventos -->
+        <div id="lista-actividades-usuario" class="contenedor-actividades">
+            <p id="mensaje-vacio" style="font-size: 0.8em; color: rgba(255,255,255,0.5);">Aún no has participado en eventos.</p>
+        </div>
+
+    </div>
+
+    <hr class="separador">
+
+    <!-- SECCIÓN 3: Cerrar sesión -->
+    <div id="boton-volver-admin" style="display: none;">
+        <button class="btn-secundario" onclick="window.location.href='admin.html'" style="border-color: #a4f5a7; color: #a4f5a7; width: 100%; margin-bottom: 10px;">
+            ⚙️ Panel Admin
+        </button>
+    </div>
+    <button class="btn-secundario" onclick="cerrarSesion()">CERRAR SESIÓN</button>
+
     </div>
 
 </body>

@@ -128,6 +128,10 @@ onAuthStateChanged(auth, async (user) => {
         }
         else if (rutaPagina.includes("principal.html")) {
             if (typeof cargarDatosPerfil === "function") cargarDatosPerfil(user);
+            if (user.email === CORREO_ADMIN) {
+                const boton = document.getElementById('boton-volver-admin');
+                if (boton) boton.style.display = 'block';
+            }
         }
         else if (rutaPagina.includes("index.html") || rutaPagina === "/" || rutaPagina === "" || rutaPagina.endsWith("/")) {
             if (user.email === CORREO_ADMIN) {

@@ -16,7 +16,7 @@
 /* 2. EL FONDO DE PANTALLA (La hoja) */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-image: url('texturas_hoja.jpg'); /* Carga tu imagen de fondo */
+    background-image: url('../assets/texturas_hoja.jpg'); /* Carga tu imagen de fondo */
     background-size: cover; /* Hace que la imagen cubra toda la pantalla sin deformarse */
     background-position: center; /* Centra la imagen */
     background-attachment: fixed; /* Evita que el fondo se mueva al hacer scroll */
@@ -122,14 +122,7 @@ input:focus {
     box-shadow: 0 0 10px rgba(126, 217, 87, 0.6);
 }
 
-/* 6. EL BOTÓN */
-/* 6. LOS BOTONES (Principal y Secundario) */
-.grupo-botones {
-    display: flex;
-    flex-direction: column; /* Pone un botón debajo del otro */
-    gap: 15px; /* Espacio entre los botones */
-    margin-top: 15px;
-}
+/* 6. LOS BOTONES (Principal y Secundario) *
 
 /* Estilos comunes para ambos botones (tamaño, tipo de letra) */
 .btn-principal, .btn-secundario {
@@ -197,14 +190,38 @@ input:focus {
 }
 
 /* El bloque del perfil superior */
+/* El bloque del perfil superior */
 .perfil-usuario {
-    display: flex;
-    justify-content: space-between; /* Empuja el texto a la izquierda y el círculo a la derecha */
-    align-items: center;
-    background-color: rgba(126, 217, 87, 0.1); /* Fondo verde muy transparente */
+    background: linear-gradient(145deg, rgba(98,197,102,0.12), rgba(126,217,87,0.05));
     padding: 20px;
-    border-radius: 15px;
-    border: 1px solid var(--color-primary);
+    border-radius: 18px;
+    border: 1px solid rgba(98, 197, 102, 0.5);
+    box-shadow: 0 0 20px rgba(98, 197, 102, 0.1);
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 10px 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+}
+
+.stat-valor {
+    color: var(--color-primary-light);
+    font-weight: bold;
+    font-size: 1.15em;
+}
+
+.stat-label {
+    color: var(--color-text-muted);
+    font-size: 0.65em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: center;
 }
 
 .info-texto h3 {
@@ -395,14 +412,13 @@ select.input-estilo option {
 }
 
 #qrcode {
-    margin-top: 20px;
-    display: block; /* Cambia de flex a block */
+    display: block;
     background: white;
-    padding: 15px; /* Un poco más de aire */
+    padding: 12px;
     border-radius: 10px;
-    width: 128px; /* Tamaño fijo igual al del JS */
+    width: 128px;
     height: 128px;
-    margin-inline: auto; /* Centrado */
+    margin: 0 auto;
 }
 
 /* Esto asegura que la imagen que crea la librería ocupe todo el div */
@@ -465,39 +481,6 @@ select.input-estilo option {
     bottom: 30px; 
 }
 
-/* =========================================
-   🎯 ESTILOS DEL ANILLO DE OBJETIVOS
-   ========================================= */
-.progreso-circular-wrapper {
-    position: relative;
-    width: 75px;  /* Puedes hacer el círculo más grande o pequeño cambiando esto */
-    height: 75px;
-    display: flex;
-    justify-content: center;
-    align-items: center; /* Estas dos líneas centran el 100% perfectamente */
-    margin: 0 auto;
-}
-
-.anillo-relleno {
-    position: absolute;
-    top: 0; 
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    background: conic-gradient(var(--color-primary-dark) 0%, rgba(255,255,255,0.2) 0%);
-    /* Esto hace el "agujero" en el centro para que se vea el fondo de hojas */
-    -webkit-mask: radial-gradient(closest-side, transparent 82%, black 83%);
-    mask: radial-gradient(closest-side, transparent 82%, black 83%);
-}
-
-#porcentaje-texto {
-    position: relative;
-    z-index: 1;
-    font-weight: bold;
-    font-size: 1.1em;
-    color: white;
-}
 /* =========================================
    UTILIDADES GENERALES
    ========================================= */
@@ -565,4 +548,22 @@ select.input-estilo option {
     font-size: 0.7em;
     color: white;
     white-space: nowrap;
+}
+
+/* =========================================
+   ADAPTACIONES MÓVILES (Media Queries)
+   ========================================= */
+@media (max-width: 768px) {
+    #modal-tabla-asistencia .contenido-modal {
+        max-width: 100vw !important;
+        width: 100vw !important;
+        max-height: 100vh !important;
+        height: 100vh;
+        border-radius: 0; /* Quitamos bordes curvos para que se sienta como una pantalla completa */
+        padding: 10px;
+    }
+    
+    #tabla-asistencia-completa {
+        font-size: 0.7em; /* Reducimos un pelín la fuente para que quepan más datos */
+    }
 }

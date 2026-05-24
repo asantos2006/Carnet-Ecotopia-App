@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - Ecotopía</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
     <link rel="manifest" href="manifest.json">
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -17,11 +17,11 @@
             <section class="seccion-admin">
                 <h3 style="color: white; font-size: 0.9em; margin-bottom: 10px;">1. Actividades</h3>
                 
-                <button class="btn-puntos" onclick="abrirModalCrearEvento()" style="margin-bottom: 12px; width: 100%;">
+                <button class="btn-puntos" onclick="abrirModalCrearEvento()" style="margin-bottom: 12px; width: 100%; background: transparent; border: 1px solid var(--color-primary-dark); color: var(--color-primary-dark);">
                     ➕ Nueva Actividad
                 </button>
                 
-                <button class="btn-puntos" onclick="abrirModalCategorias()" style="margin-bottom: 12px; width: 100%;">
+                <button class="btn-puntos" onclick="abrirModalCategorias()" style="margin-bottom: 12px; width: 100%; background: transparent; border: 1px solid var(--color-primary-dark); color: var(--color-primary-dark);">
                     🏷️ Gestionar Categorías
                 </button>
 
@@ -34,11 +34,14 @@
 
             <section class="seccion-admin">
                 <h3 style="color: white; font-size: 0.9em; margin-bottom: 10px;">2. Ecotópicos</h3>
-                <button class="btn-puntos" onclick="abrirModalCodigo()" style="margin-bottom: 12px; width: 100%;">
+                <button class="btn-puntos" onclick="abrirModalCodigo()" style="margin-bottom: 12px; width: 100%; background: transparent; border: 1px solid var(--color-primary-dark); color: var(--color-primary-dark);">
                     🔑 Código de Registro
                 </button>
                 <button class="btn-puntos" onclick="exportarExcel()" style="margin-bottom: 12px; width: 100%; background: transparent; border: 1px solid var(--color-primary-dark); color: var(--color-primary-dark);">
                     📊 Exportar Excel
+                </button>
+                <button class="btn-puntos" onclick="abrirModalEstadisticas()" style="margin-bottom: 12px; width: 100%; background: transparent; border: 1px solid var(--color-primary-dark); color: var(--color-primary-dark);">
+                    📈 Estadísticas
                 </button>
                 <div id="lista-usuarios" class="contenedor-lista">
                     <p style="color: rgba(255,255,255,0.6);">Cargando estudiantes...</p>
@@ -79,7 +82,7 @@
                     <tbody id="info-tabla-historial"></tbody>
                     <tfoot>
                         <tr style="border-top: 1px solid #62c566; font-weight: bold;">
-                            <td style="text-align: left; padding: 10px 0;">TOTAL ACUMULADO</td>
+                            <td style="text-align: left; padding: 10px 0;">Total </td>
                             <td id="info-total-puntos" style="text-align: right; padding: 10px 0; color: #62c566; font-size: 1.1em;">0 pts</td>
                         </tr>
                     </tfoot>
@@ -96,9 +99,9 @@
 
     <div id="toast-notificacion" class="toast-oculto">✅ ¡Fichaje guardado!</div>
 
-    <script type="module" src="firebase.config.js"></script>
-    <script type="module" src="auth.js"></script>
-    <script type="module" src="admin.js"></script>
+    <script type="module" src="js/firebase.config.js"></script>
+    <script type="module" src="js/auth.js"></script>
+    <script type="module" src="js/admin.js"></script>
 
     <div id="modal-codigo-admin" class="modal-oculto">
         <div class="contenido-modal" style="max-width: 340px;">
@@ -235,5 +238,73 @@
             </button>
         </div>
     </div>
+
+    <div id="modal-estadisticas" class="modal-oculto">
+        <div class="contenido-modal" style="max-width: 480px; text-align: left; max-height: 85vh; overflow-y: auto;">
+            <h3 style="color: #62c566; text-align: center; margin-bottom: 5px;">📈 Estadísticas</h3>
+            <p id="estadisticas-subtitulo" style="color: #c4c4c4; font-size: 0.8em; text-align: center; margin-bottom: 20px;">Cargando datos...</p>
+
+            <!-- RESUMEN GENERAL -->
+            <div id="estadisticas-resumen" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;"></div>
+
+            <!-- TABLA DE EVENTOS -->
+            <h4 style="color: var(--color-primary-light); font-size: 0.85em; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">Por Actividad</h4>
+            <div style="overflow-x: auto;">
+                <table id="tabla-eventos-stats" style="width: 100%; border-collapse: collapse; font-size: 0.82em; color: white;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid #62c566; color: #a4f5a7;">
+                            <th style="text-align: left; padding: 6px 4px;">Actividad</th>
+                            <th style="text-align: center; padding: 6px 4px;">Asistentes</th>
+                            <th style="text-align: center; padding: 6px 4px;">% Parti.</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-eventos-stats"></tbody>
+                </table>
+            </div>
+            <button class="btn-puntos" onclick="abrirTablaAsistencia()" style="width: 100%; margin-top: 15px;">
+                📋 Tabla de Asistencia
+            </button>
+
+            <button class="btn-secundario" onclick="cerrarModalEstadisticas()" style="width: 100%; border-color: #ff4d4d; color: #ff4d4d; margin-top: 20px;">
+                ⬅️ Cerrar
+            </button>
+        </div>
+    </div>
+
+    <div id="modal-tabla-asistencia" class="modal-oculto">
+    <div class="contenido-modal" style="max-width: 95vw; width: 700px; text-align: left; max-height: 88vh; display: flex; flex-direction: column;">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+            <h3 style="color: #62c566;">📋 Tabla de Asistencia</h3>
+            <button onclick="cerrarTablaAsistencia()" style="background: transparent; border: none; color: #ff4d4d; font-size: 1.4em; cursor: pointer;">✕</button>
+        </div>
+
+        <!-- Leyenda de colores -->
+        <div style="display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;">
+            <span style="font-size: 0.75em; display: flex; align-items: center; gap: 5px;">
+                <span style="width: 12px; height: 12px; background: rgba(98,197,102,0.4); border: 1px solid #62c566; border-radius: 3px; display: inline-block;"></span>
+                <span style="color: #c4c4c4;">Asistió</span>
+            </span>
+
+            <span style="font-size: 0.75em; display: flex; align-items: center; gap: 5px;">
+                <span style="width: 12px; height: 12px; background: rgba(255,77,77,0.18); border: 1px solid rgba(255,77,77,0.3); border-radius: 3px; display: inline-block;"></span>
+                <span style="color: #c4c4c4;">No participó</span>
+            </span>
+        </div>
+
+        <!-- Tabla con scroll horizontal y vertical -->
+        <div style="overflow: auto; flex: 1;">
+            <table id="tabla-asistencia-completa" style="border-collapse: collapse; font-size: 0.78em; color: white; min-width: 100%;">
+                <thead id="thead-asistencia"></thead>
+                <tbody id="tbody-asistencia"></tbody>
+            </table>
+        </div>
+
+        <button class="btn-secundario" onclick="cerrarTablaAsistencia()" style="width: 100%; border-color: #ff4d4d; color: #ff4d4d; margin-top: 15px;">
+            ⬅️ Volver a Estadísticas
+        </button>
+    </div>
+</div>
 </body>
+
 </html>
